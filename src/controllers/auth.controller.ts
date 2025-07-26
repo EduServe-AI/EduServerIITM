@@ -1,5 +1,5 @@
 import { Request , Response } from "express";
-import { findUserByEmail , createStudent } from "../services/user.service";
+import { findUserByEmail , createStudent, checkPassword } from "../services/user.service";
 import { generateToken , verifyToken } from "../utils/jwt";
 import  Responder from "../utils/responder"
 
@@ -79,6 +79,58 @@ export const refreshToken = (req : Request , res : Response) => {
         return Responder(res , {
             error : error,
             message : "Refresh Token Error",
+            httpCode : 500
+        })
+    }
+}
+
+export const loginStudent = async (req : Request , res : Response) => {
+    try {
+
+        const { email , password } = req.body
+
+        // checking for student existence
+        const student = await findUserByEmail(email);
+        if (!student) {
+          return res.status(404).json({ message: "User not found" });
+        } 
+        
+        // checking for password hash
+        const isMatch = await checkPassword(password, student.password!);
+
+        // validating
+        if (!isMatch) {
+          return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        // Generating tokens
+        const {accessToken , refreshToken} = generateToken(student.id , student.role) 
+
+        res.cookie('refreshToken' , refreshToken , {
+            httpOnly : true,
+            secure : false,
+            sameSite : "lax" , 
+            maxAge : 7 * 24 * 60 * 60 * 1000 ,
+            path : '/',
+        })
+ 
+        student.password = null
+
+        return Responder(res , {
+            message : "Student logged-in successfully",
+            data : {
+                user : student,
+                accessToken
+            },
+            httpCode : 200
+        })
+
+
+    } catch (error:any) {
+        console.error("Login error:" , error)
+        Responder(res , {
+            error : error,
+            message : "Internal Server Error",
             httpCode : 500
         })
     }
