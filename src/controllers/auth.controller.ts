@@ -114,7 +114,7 @@ export const loginStudent = async (req : Request , res : Response) => {
             path : '/',
         })
  
-        student.password = null
+        const { password: _, ...studentWithoutPassword } = student;
 
         return Responder(res , {
             message : "Student logged-in successfully",
