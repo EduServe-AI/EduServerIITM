@@ -191,7 +191,6 @@ export const loginInstructor = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Instructor not found" });
     }
 
-    console.log(instructor);
     // checking for password hash
     const isMatch = await checkPassword(password, instructor.password!);
 
@@ -199,8 +198,6 @@ export const loginInstructor = async (req: Request, res: Response) => {
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
-
-    instructor.password = null;
 
     // Generating tokens
     const { accessToken, refreshToken } = generateToken(
