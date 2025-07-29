@@ -1,137 +1,232 @@
-import { Request , Response } from "express";
-import { findUserByEmail , createStudent, checkPassword } from "../services/user.service";
-import { generateToken , verifyToken } from "../utils/jwt";
-import  Responder from "../utils/responder"
+import { Request, Response } from "express";
+import {
+  findStudentByEmail,
+  findInstructorByEmail,
+  createStudent,
+  createInstructor,
+  checkPassword,
+} from "../services/user.service";
+import { generateToken, verifyToken } from "../utils/jwt";
+import Responder from "../utils/responder";
 
-export const registerStudent = async (req : Request , res : Response) => {
-    try {
-        
-        const { username , email , password } = req.body;
+export const registerStudent = async (req: Request, res: Response) => {
+  try {
+    const { username, email, password } = req.body;
 
-        // checking for student existence
-        const existingStudent = await findUserByEmail(email);
-        if (existingStudent) {
-          return res.status(400).json({ message: "Email already exists" });
-        } 
-        
-
-        const newStudent = await createStudent(username , email , password);
-
-        const {accessToken , refreshToken} = generateToken(newStudent.id , newStudent.role) 
-
-        res.cookie('refreshToken' , refreshToken , {
-            httpOnly : true,
-            secure : false,
-            sameSite : "lax" , 
-            maxAge : 7 * 24 * 60 * 60 * 1000 ,
-            path : '/',
-            
-        })
- 
-        newStudent.password = null
-
-        return Responder(res , {
-            message : "Student registered successfully",
-            data : {
-                user : newStudent,
-                accessToken
-            },
-            httpCode : 200
-        })
-
-    } catch (error : any) {
-        console.error("Signup error:" , error)
-        Responder(res , {
-            error : error,
-            message : "Internal Server Error",
-            httpCode : 500
-        })
+    // checking for student existence
+    const existingStudent = await findStudentByEmail(email);
+    if (existingStudent) {
+      return res
+        .status(400)
+        .json({ message: "Student with this Email already exists" });
     }
-}
 
+    const newStudent = await createStudent(username, email, password);
 
-export const refreshToken = (req : Request , res : Response) => {
-    try {
+    const { accessToken, refreshToken } = generateToken(
+      newStudent.id,
+      newStudent.role
+    );
 
-        const refreshToken = req.cookies.refreshToken;
-        
-        if (!refreshToken) {
-            return Responder(res, {
-                message: "No refresh token provided",
-                httpCode: 401
-            });
-        }
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
 
-        // Verify the refresh token
-        const decoded = verifyToken(refreshToken, 'refresh') as any;
-        
-        // Generating new access token 
-        const accessToken = generateToken(decoded.userId , decoded.role)
+    return Responder(res, {
+      message: "Student registered successfully",
+      data: {
+        user: newStudent,
+        accessToken,
+      },
+      httpCode: 200,
+    });
+  } catch (error: any) {
+    console.error("Signup error:", error);
+    Responder(res, {
+      error: error,
+      message: "Internal Server Error",
+      httpCode: 500,
+    });
+  }
+};
 
-        return Responder(res, {
-            message: "Access token refreshed successfully",
-            data: { accessToken },
-            httpCode: 200
-        });
-        
-    } catch (error : any) {
-        console.error("Refresh Token Error: ", error)
-        return Responder(res , {
-            error : error,
-            message : "Refresh Token Error",
-            httpCode : 500
-        })
+export const registerInstructor = async (req: Request, res: Response) => {
+  try {
+    const { username, email, password } = req.body;
+
+    // checking for instructor existence
+    const existingInstructor = await findInstructorByEmail(email);
+    if (existingInstructor) {
+      return res
+        .status(400)
+        .json({ message: "Instructor with this Email already exists" });
     }
-}
 
-export const loginStudent = async (req : Request , res : Response) => {
-    try {
+    const newInstructor = await createInstructor(username, email, password);
 
-        const { email , password } = req.body
+    const { accessToken, refreshToken } = generateToken(
+      newInstructor.id,
+      newInstructor.role
+    );
 
-        // checking for student existence
-        const student = await findUserByEmail(email);
-        if (!student) {
-          return res.status(404).json({ message: "User not found" });
-        } 
-        
-        // checking for password hash
-        const isMatch = await checkPassword(password, student.password!);
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
 
-        // validating
-        if (!isMatch) {
-          return res.status(401).json({ message: "Invalid credentials" });
-        }
+    return Responder(res, {
+      message: "Instructor registered successfully",
+      data: {
+        instructor: newInstructor,
+        accessToken,
+      },
+      httpCode: 200,
+    });
+  } catch (error: any) {
+    console.error("Signup error:", error);
+    Responder(res, {
+      error: error,
+      message: "Internal Server Error",
+      httpCode: 500,
+    });
+  }
+};
 
-        // Generating tokens
-        const {accessToken , refreshToken} = generateToken(student.id , student.role) 
+export const refreshToken = (req: Request, res: Response) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
 
-        res.cookie('refreshToken' , refreshToken , {
-            httpOnly : true,
-            secure : false,
-            sameSite : "lax" , 
-            maxAge : 7 * 24 * 60 * 60 * 1000 ,
-            path : '/',
-        })
- 
-        const { password: _, ...studentWithoutPassword } = student;
-
-        return Responder(res , {
-            message : "Student logged-in successfully",
-            data : {
-                user : student,
-                accessToken
-            },
-            httpCode : 200
-        })
-
-
-    } catch (error:any) {
-        console.error("Login error:" , error)
-        Responder(res , {
-            error : error,
-            message : "Internal Server Error",
-            httpCode : 500
-        })
+    if (!refreshToken) {
+      return Responder(res, {
+        message: "No refresh token provided",
+        httpCode: 401,
+      });
     }
-}
+
+    // Verify the refresh token
+    const decoded = verifyToken(refreshToken, "refresh") as any;
+
+    // Generating new access token
+    const accessToken = generateToken(decoded.userId, decoded.role);
+
+    return Responder(res, {
+      message: "Access token refreshed successfully",
+      data: { accessToken },
+      httpCode: 200,
+    });
+  } catch (error: any) {
+    console.error("Refresh Token Error: ", error);
+    return Responder(res, {
+      error: error,
+      message: "Refresh Token Error",
+      httpCode: 500,
+    });
+  }
+};
+
+export const loginStudent = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    // checking for student existence
+    const student = await findStudentByEmail(email);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    // checking for password hash
+    const isMatch = await checkPassword(password, student.password!);
+
+    // validating
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Generating tokens
+    const { accessToken, refreshToken } = generateToken(
+      student.id,
+      student.role
+    );
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
+
+    return Responder(res, {
+      message: "Student logged-in successfully",
+      data: {
+        student: student,
+        accessToken,
+      },
+      httpCode: 200,
+    });
+  } catch (error: any) {
+    console.error("Login error:", error);
+    Responder(res, {
+      error: error,
+      message: "Internal Server Error",
+      httpCode: 500,
+    });
+  }
+};
+
+export const loginInstructor = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    // checking for instructor existence
+    const instructor = await findInstructorByEmail(email);
+    if (!instructor) {
+      return res.status(404).json({ message: "Instructor not found" });
+    }
+
+    // checking for password hash
+    const isMatch = await checkPassword(password, instructor.password!);
+
+    // validating
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Generating tokens
+    const { accessToken, refreshToken } = generateToken(
+      instructor.id,
+      instructor.role
+    );
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
+
+    return Responder(res, {
+      message: "Instructor logged-in successfully",
+      data: {
+        instructor: instructor,
+        accessToken,
+      },
+      httpCode: 200,
+    });
+  } catch (error: any) {
+    console.error("Login error:", error);
+    Responder(res, {
+      error: error,
+      message: "Internal Server Error",
+      httpCode: 500,
+    });
+  }
+};
