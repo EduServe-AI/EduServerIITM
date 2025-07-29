@@ -2,12 +2,15 @@ import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/db.config";
 import { UserAttributes } from "./types";
 
-
 // 2. Creation attributes for optional fields
-interface UserCreationAttributes extends Optional<UserAttributes, "id" | "createdAt" | "updatedAt"> {}
+interface UserCreationAttributes
+  extends Optional<UserAttributes, "id" | "createdAt" | "updatedAt"> {}
 
 // 3. Define User model class
-class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
+class User
+  extends Model<UserAttributes, UserCreationAttributes>
+  implements UserAttributes
+{
   public id!: string;
   public username!: string | null;
   public email!: string;
@@ -55,9 +58,12 @@ User.init(
   },
   {
     sequelize,
-    modelName: "User", 
+    modelName: "User",
     tableName: "users", // consistent naming
     timestamps: true,
+    defaultScope: {
+      attributes: { exclude: ["password"] },
+    },
   }
 );
 
