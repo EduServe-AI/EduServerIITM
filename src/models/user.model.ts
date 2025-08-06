@@ -17,6 +17,7 @@ class User
   public password!: string | null;
   public role!: "student" | "instructor";
   public onboarded!: boolean;
+  public verified!: boolean;
 
   // Optional: timestamps
   public readonly createdAt!: Date;
@@ -52,6 +53,10 @@ User.init(
       allowNull: true,
     },
     onboarded: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    verified: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },

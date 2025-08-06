@@ -12,6 +12,8 @@ node_modules/
 dist/
 build/
 
+#migrations
+src/migrations
 
 # IDE specific files
 .vscode/

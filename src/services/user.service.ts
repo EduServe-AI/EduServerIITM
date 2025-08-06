@@ -24,6 +24,7 @@ export const createStudent = async (
     password: hashedPassword,
     role: "student",
     onboarded: false,
+    verified: false,
   });
 
   return student;
@@ -42,6 +43,7 @@ export const createInstructor = async (
     password: hashedPassword,
     role: "instructor",
     onboarded: false,
+    verified: false,
   });
 
   return instructor;
