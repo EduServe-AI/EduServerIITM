@@ -3,22 +3,22 @@ import { Level } from "../types/level";
 // Defining the levels data as a constant
 export const LEVELS_DATA: Level[] = [
   {
-    name: "Foundation",
+    name: "foundation",
     totalCourses: 8,
     credits: 32,
   },
   {
-    name: "Diploma",
+    name: "diploma",
     totalCourses: 16,
     credits: 54,
   },
   {
-    name: "Bsc",
+    name: "bsc",
     totalCourses: 7,
     credits: 28,
   },
   {
-    name: "Bs",
+    name: "bs",
     totalCourses: 7,
     credits: 28,
   },

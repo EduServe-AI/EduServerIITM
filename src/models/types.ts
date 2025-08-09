@@ -4,6 +4,7 @@ export interface UserAttributes {
   email: string;
   password: string | null;
   role: "student" | "instructor";
+  level?: "foundation" | "diploma" | "bsc" | "bs";
   onboarded: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -12,7 +13,7 @@ export interface UserAttributes {
 
 export interface LevelAttributes {
   id: string;
-  name: "Foundation" | "Diploma" | "Bsc" | "Bs";
+  name: "foundation" | "diploma" | "bsc" | "bs";
   totalCourses: number;
   credits: number;
   createdAt?: Date;

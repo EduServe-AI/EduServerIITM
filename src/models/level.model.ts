@@ -10,7 +10,7 @@ class Level
   implements LevelAttributes
 {
   public id!: string;
-  public name!: "Foundation" | "Diploma" | "Bsc" | "Bs";
+  public name!: "foundation" | "diploma" | "bsc" | "bs";
   public totalCourses!: number;
   public credits!: number;
 
@@ -26,7 +26,7 @@ Level.init(
       primaryKey: true,
     },
     name: {
-      type: DataTypes.ENUM("Foundation", "Diploma", "Bsc", "Bs"),
+      type: DataTypes.ENUM("foundation", "diploma", "bsc", "bs"),
       allowNull: true,
     },
     totalCourses: {

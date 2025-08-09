@@ -11,6 +11,10 @@ export const findInstructorByEmail = async (email: string) => {
   });
 };
 
+export const findUserById = async (userId: string) => {
+  return await User.findByPk(userId);
+};
+
 export const createStudent = async (
   username: string,
   email: string,

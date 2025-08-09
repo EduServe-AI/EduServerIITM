@@ -16,6 +16,7 @@ class User
   public email!: string;
   public password!: string | null;
   public role!: "student" | "instructor";
+  public level!: "foundation" | "diploma" | "bsc" | "bs";
   public onboarded!: boolean;
   public verified!: boolean;
 
@@ -50,6 +51,10 @@ User.init(
     },
     role: {
       type: DataTypes.ENUM("student", "instructor"),
+      allowNull: true,
+    },
+    level: {
+      type: DataTypes.ENUM("foundation", "diploma", "bsc", "bs"),
       allowNull: true,
     },
     onboarded: {

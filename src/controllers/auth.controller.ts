@@ -101,6 +101,13 @@ export const registerInstructor = async (req: Request, res: Response) => {
 
 export const refreshToken = (req: Request, res: Response) => {
   try {
+    if (!req.cookies) {
+      return Responder(res, {
+        message: "No cookies provided",
+        httpCode: 401,
+      });
+    }
+
     const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
@@ -114,7 +121,7 @@ export const refreshToken = (req: Request, res: Response) => {
     const decoded = verifyToken(refreshToken, "refresh") as any;
 
     // Generating new access token
-    const accessToken = generateToken(decoded.userId, decoded.role);
+    const { accessToken } = generateToken(decoded.userId, decoded.role);
 
     return Responder(res, {
       message: "Access token refreshed successfully",

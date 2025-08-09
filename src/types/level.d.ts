@@ -1,4 +1,4 @@
-export type LevelName = "Foundation" | "Diploma" | "Bsc" | "Bs";
+export type LevelName = "foundation" | "diploma" | "bsc" | "bs";
 
 export type Level = {
   name: LevelName;
