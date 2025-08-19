@@ -1,9 +1,12 @@
 import express, { Request, Response } from "express";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
+import levelRoutes from "./routes/level.routes";
 import cors from "cors";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import enrollmentRoutes from "./routes/enrollment.routes";
+import courseRoutes from "./routes/course.routes";
 
 const app = express();
 
@@ -22,6 +25,9 @@ app.use(morgan("dev"));
 // Regsitering the routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
+app.use("/api/v1/level", levelRoutes);
+app.use("/api/v1/enrollment", enrollmentRoutes);
+app.use("/api/v1/course", courseRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("<h1>Eduserve Backend </h1>");

@@ -1,5 +1,7 @@
 import User from "../models/user.model";
 import bcrypt from "bcryptjs";
+import Responder from "../utils/responder";
+import { Request, Response } from "express";
 
 export const findStudentByEmail = async (email: string) => {
   return await User.unscoped().findOne({ where: { email, role: "student" } });
@@ -60,4 +62,16 @@ export const checkPassword = async (
   const isMatch = await bcrypt.compare(password, hashedPassword);
 
   return isMatch;
+};
+
+export const getUserOrFail = async (req: Request, res: Response) => {
+  const user = await findUserById(req.userId!);
+  if (!user) {
+    Responder(res, {
+      message: "User not found",
+      httpCode: 404,
+    });
+    return null;
+  }
+  return user;
 };

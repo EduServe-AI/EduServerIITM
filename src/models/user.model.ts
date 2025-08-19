@@ -1,6 +1,14 @@
-import { DataTypes, Model, Optional } from "sequelize";
+import {
+  DataTypes,
+  Model,
+  Optional,
+  Association,
+  HasManyGetAssociationsMixin,
+} from "sequelize";
 import { sequelize } from "../config/db.config";
 import { UserAttributes } from "./types";
+import Course from "./course.model";
+import Enrollment from "./enrollment.model";
 
 // 2. Creation attributes for optional fields
 interface UserCreationAttributes
@@ -23,6 +31,16 @@ class User
   // Optional: timestamps
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+
+  // Assosciation properties
+  public courses?: Course[];
+  public enrollments?: Enrollment[];
+
+  // Static associations
+  public static associations: {
+    courses: Association<User, Course>;
+    enrollments: Association<User, Enrollment>;
+  };
 }
 
 // 4. Init the model
