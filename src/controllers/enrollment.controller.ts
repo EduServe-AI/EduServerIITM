@@ -94,6 +94,10 @@ export const addCourses = async (req: Request, res: Response) => {
       returning: true,
     });
 
+    // setting the onboarded to true
+    user.onboarded = true;
+    await user.save();
+
     return Responder(res, {
       message: "Courses enrolled successfully",
       data: {
