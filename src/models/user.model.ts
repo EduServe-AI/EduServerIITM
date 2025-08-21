@@ -1,6 +1,14 @@
-import { DataTypes, Model, Optional } from "sequelize";
+import {
+  DataTypes,
+  Model,
+  Optional,
+  Association,
+  HasManyGetAssociationsMixin,
+} from "sequelize";
 import { sequelize } from "../config/db.config";
 import { UserAttributes } from "./types";
+import Course from "./course.model";
+import Enrollment from "./enrollment.model";
 
 // 2. Creation attributes for optional fields
 interface UserCreationAttributes
@@ -15,12 +23,24 @@ class User
   public username!: string | null;
   public email!: string;
   public password!: string | null;
-  public role!: "student" | "instructor";
+  public role!: "admin" | "student" | "instructor";
+  public level!: "foundation" | "diploma" | "bsc" | "bs";
   public onboarded!: boolean;
+  public verified!: boolean;
 
   // Optional: timestamps
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+
+  // Assosciation properties
+  public courses?: Course[];
+  public enrollments?: Enrollment[];
+
+  // Static associations
+  public static associations: {
+    courses: Association<User, Course>;
+    enrollments: Association<User, Enrollment>;
+  };
 }
 
 // 4. Init the model
@@ -48,10 +68,18 @@ User.init(
       allowNull: true,
     },
     role: {
-      type: DataTypes.ENUM("student", "instructor"),
+      type: DataTypes.ENUM("admin", "student", "instructor"),
+      allowNull: true,
+    },
+    level: {
+      type: DataTypes.ENUM("foundation", "diploma", "bsc", "bs"),
       allowNull: true,
     },
     onboarded: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    verified: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
