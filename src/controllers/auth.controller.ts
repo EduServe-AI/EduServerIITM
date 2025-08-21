@@ -120,6 +120,18 @@ export const refreshToken = (req: Request, res: Response) => {
     // Verify the refresh token
     const decoded = verifyToken(refreshToken, "refresh") as any;
 
+    if (
+      !decoded ||
+      decoded.type !== "refresh" ||
+      !decoded.userId ||
+      !decoded.role
+    ) {
+      return Responder(res, {
+        message: "Invalid refresh token",
+        httpCode: 401,
+      });
+    }
+
     // Generating new access token
     const { accessToken } = generateToken(decoded.userId, decoded.role);
 

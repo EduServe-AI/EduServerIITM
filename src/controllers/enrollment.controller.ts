@@ -46,8 +46,6 @@ export const addCourses = async (req: Request, res: Response) => {
   try {
     const { selected_courses } = req.body;
 
-    console.log("Selected_courses", selected_courses);
-
     const user = await findUserById(req.userId!);
 
     if (!user) {
@@ -75,8 +73,6 @@ export const addCourses = async (req: Request, res: Response) => {
         name: selected_courses,
       },
     });
-
-    console.log("courses", courses);
 
     if (courses.length !== selected_courses.length) {
       return res.status(400).json({
