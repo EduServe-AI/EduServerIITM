@@ -28,6 +28,13 @@ export const instructorOnboardController = async (
         httpCode: 404,
       });
     }
+
+    if (instructor.onboarded) {
+      return Responder(res, {
+        message: "Instructor is already onboarded",
+        httpCode: 400,
+      });
+    }
     // getting the updates from the req
     const {
       iitmProfileUrl,

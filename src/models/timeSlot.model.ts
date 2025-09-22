@@ -95,13 +95,5 @@ AvailabilityTimeSlot.init(
     tableName: "availability_time_slots",
     underscored: true,
     timestamps: true,
-    validate: {
-      // Custom validation to ensure startTime is before endTime
-      startBeforeEnd(this: AvailabilityTimeSlot) {
-        if (this.startTime >= this.endTime) {
-          throw new Error("Start time must be before end time");
-        }
-      },
-    },
   }
 );

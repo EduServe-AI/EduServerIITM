@@ -59,6 +59,7 @@ InstructorProfiles.init(
     instructorId: {
       type: DataTypes.UUID,
       allowNull: false,
+      unique: true,
     },
     iitmProfileUrl: {
       type: DataTypes.STRING,
