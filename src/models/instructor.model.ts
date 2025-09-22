@@ -57,6 +57,7 @@ InstructorProfiles.init(
       primaryKey: true,
     },
     instructorId: {
+      // Foreignkey referencing the user table
       type: DataTypes.UUID,
       allowNull: false,
       unique: true,

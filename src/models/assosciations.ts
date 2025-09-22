@@ -75,6 +75,19 @@ export const setUpAssociations = () => {
     onUpdate: "CASCADE",
   });
 
+  //------------------------- Relationship between User and Instructor profile ---------------
+  User.hasOne(InstructorProfiles, {
+    foreignKey: "instructorId",
+    as: "instructorProfile",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  InstructorProfiles.belongsTo(User, {
+    foreignKey: "instructorId",
+    as: "user",
+  });
+
   // one instructor can have many skills
   InstructorProfiles.hasMany(Skill, {
     foreignKey: "instructorProfileId",
