@@ -13,6 +13,7 @@ export interface UserAttributes {
   createdAt?: Date;
   updatedAt?: Date;
   verified: boolean;
+  profileUrl?: string;
 }
 
 export interface LevelAttributes {

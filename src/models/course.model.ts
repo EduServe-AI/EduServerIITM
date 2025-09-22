@@ -8,6 +8,7 @@ import { DataTypes, Model, Optional, Association } from "sequelize";
 type User = import("./user.model").default;
 type Level = import("./level.model").default;
 type Enrollment = import("./enrollment.model").default;
+type InstructorProfiles = import("./instructor.model").default;
 
 interface CourseCreationAttributes
   extends Optional<CourseAttributes, "id" | "createdAt" | "updatedAt"> {}
@@ -32,12 +33,14 @@ class Course
   public users?: User[];
   public enrollments?: Enrollment[];
   public levelInfo?: Level; // renamed from 'level' to avoid conflict
+  public instructors?: InstructorProfiles[]; // should give the instructors who will teach this course.
 
   // Static associations
   public static associations: {
     users: Association<Course, User>;
     enrollments: Association<Course, Enrollment>;
     levelInfo: Association<Course, Level>;
+    instructors: Association<Course, InstructorProfiles>;
   };
 }
 
