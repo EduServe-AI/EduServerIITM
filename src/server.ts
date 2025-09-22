@@ -16,12 +16,16 @@ sequelize
     await syncModels();
     await populateLevelsIfEmpty();
     await populateCoursesIfEmpty();
+    await populateLanguagesIfEmpty();
+    await populateDaysIfEmpty();
   })
   .catch((err) => {
     console.error("❌ DB Connection failed:", err);
   });
 
 import app from "./app";
+import { populateLanguagesIfEmpty } from "./scripts/populateLanguages";
+import { populateDaysIfEmpty } from "./scripts/populateDays";
 // App connection with express
 app.listen(config.port, () => {
   console.log(`🚀 Server running on http://localhost:${config.port}`);
