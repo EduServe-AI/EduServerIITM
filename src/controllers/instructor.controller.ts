@@ -13,6 +13,7 @@ import Availability from "../models/availability.model";
 import { getDayIndex } from "../services/day.service";
 import DayOfWeek from "../models/dayofWeek";
 import AvailabilityTimeSlot from "../models/timeSlot.model";
+import Language from "../models/language.model";
 
 export const instructorOnboardController = async (
   req: Request,
@@ -180,6 +181,48 @@ export const instructorOnboardController = async (
     // Rollbacking the transaction
     if (transaction) await transaction.rollback();
 
+    console.error(error);
+    return Responder(res, {
+      error: error,
+      message: "InternaL Server Error",
+      httpCode: 500,
+    });
+  }
+};
+
+export const featuredInstructorController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const featuredInstructors = await InstructorProfiles.findAll({
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "username", "profileUrl"],
+          // through: {},
+        },
+        {
+          model: Skill,
+          as: "skills",
+          attributes: ["name"],
+          // through: {
+          //   attributes: ["name"],
+          // },
+        },
+      ],
+      attributes: ["level", "bio", "basePrice", "id"],
+    });
+
+    return Responder(res, {
+      message: "Featured Instructors retreived Successfully",
+      httpCode: 200,
+      data: {
+        featuredInstructors,
+      },
+    });
+  } catch (error) {
     console.error(error);
     return Responder(res, {
       error: error,
