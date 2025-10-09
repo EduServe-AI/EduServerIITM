@@ -253,20 +253,10 @@ export const loginInstructor = async (req: Request, res: Response) => {
 
 export const logOutController = async (req: Request, res: Response) => {
   try {
-    // getting the user by id
-    const user = await findUserById(req.userId!);
-
-    if (!user) {
-      return Responder(res, {
-        message: "User not found",
-        httpCode: 404,
-      });
-    }
-
     // clearing the cookie
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
     });
