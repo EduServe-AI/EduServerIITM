@@ -5,6 +5,7 @@ import {
   createStudent,
   createInstructor,
   checkPassword,
+  findUserById,
 } from "../services/user.service";
 import { generateToken, verifyToken } from "../utils/jwt";
 import Responder from "../utils/responder";
@@ -242,6 +243,30 @@ export const loginInstructor = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("Login error:", error);
+    Responder(res, {
+      error: error,
+      message: "Internal Server Error",
+      httpCode: 500,
+    });
+  }
+};
+
+export const logOutController = async (req: Request, res: Response) => {
+  try {
+    // clearing the cookie
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    });
+
+    return Responder(res, {
+      message: "Logged out successfully",
+      httpCode: 200,
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
     Responder(res, {
       error: error,
       message: "Internal Server Error",
