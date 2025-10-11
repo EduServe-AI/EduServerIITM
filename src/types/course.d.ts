@@ -10,7 +10,14 @@ export type foundationSubjects =
   | "Computational Thinking"
   | "Python";
 
-export type diplomadsSubjects = "MLF" | "MLT" | "MLP" | "BDM" | "BA" | "TDS";
+export type diplomadsSubjects =
+  | "MLF"
+  | "MLT"
+  | "MLP"
+  | "BDM"
+  | "BA"
+  | "TDS"
+  | "DL & GENAI";
 
 export type diplomaprSubjects =
   | "PDSA"
@@ -24,7 +31,8 @@ export type diplomaProjects =
   | "MLP Project"
   | "BDM Project"
   | "MAD-I Project"
-  | "MAD-II Project";
+  | "MAD-II Project"
+  | "DL & GENAI Project";
 
 export type bscSubjects = "AI" | "DL" | "SE" | "ST" | "SFPG" | "MR" | "LLM";
 

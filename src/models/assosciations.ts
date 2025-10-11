@@ -9,6 +9,7 @@ import Availability from "./availability.model";
 import UserLanguage from "./userLanguage.model";
 import DayOfWeek from "./dayofWeek";
 import AvailabilityTimeSlot from "./timeSlot.model";
+import Bots from "./bot.model";
 
 // setup associations
 export const setUpAssociations = () => {
@@ -199,6 +200,19 @@ export const setUpAssociations = () => {
   AvailabilityTimeSlot.belongsTo(Availability, {
     foreignKey: "availabilityId",
     as: "availability",
+  });
+
+  // ----------------------- Relationships between course and chatbots -----------------
+  Course.hasMany(Bots, {
+    foreignKey: "courseId",
+    as: "bots",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  Bots.belongsTo(Course, {
+    foreignKey: "courseId",
+    as: "course",
   });
 
   console.log("Associations set up successfully!");

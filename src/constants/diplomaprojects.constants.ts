@@ -27,4 +27,10 @@ export const DIPLOMA_PROJECTS: DiplomaProjects[] = [
     level: "diploma",
     prerequisites: ["MAD-I Project"],
   },
+  {
+    name: "DL & GENAI Project",
+    description: "Developinf a Generative AI Project",
+    credits: 2,
+    level: "diploma",
+  },
 ];
