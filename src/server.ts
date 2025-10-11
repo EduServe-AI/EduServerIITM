@@ -18,6 +18,7 @@ sequelize
     await populateCoursesIfEmpty();
     await populateLanguagesIfEmpty();
     await populateDaysIfEmpty();
+    await populateBotsIfEmpty();
   })
   .catch((err) => {
     console.error("❌ DB Connection failed:", err);
@@ -26,6 +27,7 @@ sequelize
 import app from "./app";
 import { populateLanguagesIfEmpty } from "./scripts/populateLanguages";
 import { populateDaysIfEmpty } from "./scripts/populateDays";
+import { populateBotsIfEmpty } from "./scripts/populateBots";
 // App connection with express
 app.listen(config.port, () => {
   console.log(`🚀 Server running on http://localhost:${config.port}`);

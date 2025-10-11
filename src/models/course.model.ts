@@ -9,6 +9,7 @@ type User = import("./user.model").default;
 type Level = import("./level.model").default;
 type Enrollment = import("./enrollment.model").default;
 type InstructorProfiles = import("./instructor.model").default;
+type Bots = import("./bot.model").default;
 
 interface CourseCreationAttributes
   extends Optional<CourseAttributes, "id" | "createdAt" | "updatedAt"> {}
@@ -34,6 +35,7 @@ class Course
   public enrollments?: Enrollment[];
   public levelInfo?: Level; // renamed from 'level' to avoid conflict
   public instructors?: InstructorProfiles[]; // should give the instructors who will teach this course.
+  public bots?: Bots[]; // should give the bots associated with this course
 
   // Static associations
   public static associations: {
@@ -41,6 +43,7 @@ class Course
     enrollments: Association<Course, Enrollment>;
     levelInfo: Association<Course, Level>;
     instructors: Association<Course, InstructorProfiles>;
+    bots: Association<Course, Bots>;
   };
 }
 

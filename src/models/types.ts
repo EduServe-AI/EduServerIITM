@@ -48,3 +48,14 @@ export interface EnrollmentAttributes {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export interface BotAttributes {
+  id: string;
+  name: string;
+  description: string;
+  courseId: string;
+  level: LevelName;
+  is_active?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}

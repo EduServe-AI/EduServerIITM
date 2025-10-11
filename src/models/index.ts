@@ -9,6 +9,7 @@ import UserLanguage from "./userLanguage.model";
 import Availability from "./availability.model";
 import DayOfWeek from "./dayofWeek";
 import AvailabilityTimeSlot from "./timeSlot.model";
+import Bots from "./bot.model";
 
 export const syncModels = async () => {
   await User.sync({ alter: true });
@@ -22,4 +23,5 @@ export const syncModels = async () => {
   await DayOfWeek.sync({ alter: true });
   await Availability.sync({ alter: true });
   await AvailabilityTimeSlot.sync({ alter: true });
+  await Bots.sync({ alter: true });
 };

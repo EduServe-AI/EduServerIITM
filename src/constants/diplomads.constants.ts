@@ -39,6 +39,13 @@ export const DIPLOMADS_SUBJECTS: DiplomaDsSubjects[] = [
     prerequisites: ["BDM"],
   },
   {
+    name: "DL & GENAI",
+    description:
+      "This course aims to provide a comprehensive introduction to the foundational and practical aspects of Deep Learning and Generative AI. Through a balanced blend of theoretical concepts and hands-on experience, students will learn to build, train, and evaluate artificial neural networks for a variety of tasks in computer vision and natural language processing. The course covers key architectures such as Convolutional Neural Networks (CNNs) for image data, Recurrent Neural Networks (RNNs) and LSTMs for sequential data, and extends into the realm of generative models including Autoencoders, Variational Autoencoders (VAEs), Generative Adversarial Networks (GANs) and Large Language Models (LLMs). By the end of the course, learners will gain the skills to implement core deep learning models and apply generative AI techniques to solve practical problems.",
+    credits: 4,
+    level: "diploma",
+  },
+  {
     name: "TDS",
     description:
       "This practical course will teach students to use popular tools for sourcing data, transforming it, analyzing it, communicating these as visual stories, and deploying them in production. Pre-requisites: Python, HTML, JavaScript, Excel, data science basics",
