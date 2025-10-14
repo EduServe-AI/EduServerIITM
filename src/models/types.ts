@@ -54,6 +54,7 @@ export interface BotAttributes {
   name: string;
   description: string;
   courseId: string;
+  numInteractions?: number;
   level: LevelName;
   is_active?: boolean;
   createdAt?: Date;

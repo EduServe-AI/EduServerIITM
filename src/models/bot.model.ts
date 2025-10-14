@@ -21,6 +21,7 @@ class Bots
   public description!: string;
   public courseId!: string;
   public level!: LevelName;
+  public numInteractions!: number;
   public is_active?: boolean;
 
   // Optional: timestamps
@@ -60,6 +61,10 @@ Bots.init(
     level: {
       type: DataTypes.ENUM("foundation", "diploma", "bsc", "bs"),
       allowNull: false,
+    },
+    numInteractions: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
     },
     is_active: {
       type: DataTypes.BOOLEAN,
