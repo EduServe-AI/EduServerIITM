@@ -201,15 +201,11 @@ export const featuredInstructorController = async (
           model: User,
           as: "user",
           attributes: ["id", "username", "profileUrl"],
-          // through: {},
         },
         {
           model: Skill,
           as: "skills",
           attributes: ["name"],
-          // through: {
-          //   attributes: ["name"],
-          // },
         },
       ],
       attributes: ["level", "bio", "basePrice", "id"],
