@@ -38,8 +38,8 @@ export const featuredChatBotController = async (
   } catch (error) {
     console.error(error);
     return Responder(res, {
-      error: error,
-      message: "InternaL Server Error",
+      error: "Internal Server Error",
+      message: "An unexpected error occurred on the server.",
       httpCode: 500,
     });
   }
