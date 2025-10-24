@@ -8,6 +8,7 @@ interface SkillAttributes {
   name: string;
   courseId: string;
   instructorProfileId: string;
+  userId: string;
 }
 
 type SkillCreationAttributes = Optional<SkillAttributes, "id">;
@@ -20,6 +21,7 @@ export default class Skill
   public name!: string;
   public courseId!: string;
   public instructorProfileId!: string;
+  public userId!: string;
 }
 
 Skill.init(
@@ -40,6 +42,11 @@ Skill.init(
     },
     instructorProfileId: {
       // foreignkey referencing the id in the instructorProfile table.
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
+    userId: {
+      // foreignkey referencing the id in the usersTable
       type: DataTypes.UUID,
       allowNull: false,
     },

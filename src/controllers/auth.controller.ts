@@ -216,7 +216,10 @@ export const loginInstructor = async (req: Request, res: Response) => {
 
     // validating
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return Responder(res, {
+        error: "Invalid credentials",
+        httpCode: 401,
+      });
     }
 
     // Generating tokens

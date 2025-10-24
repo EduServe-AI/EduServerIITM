@@ -27,7 +27,6 @@ class User
   public level!: "foundation" | "diploma" | "bsc" | "bs";
   public onboarded!: boolean;
   public verified!: boolean;
-  public profileUrl!: string;
 
   // Optional: timestamps
   public readonly createdAt!: Date;
@@ -83,10 +82,6 @@ User.init(
     verified: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
-    },
-    profileUrl: {
-      type: DataTypes.TEXT,
-      allowNull: true,
     },
   },
   {
