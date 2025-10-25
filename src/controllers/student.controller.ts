@@ -39,7 +39,7 @@ export const getStudentDataController = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error in getting the student data", error);
     return Responder(res, {
-      error: error,
+      error: "An unexpected error occurred while fetching student data.",
       message: "InternaL Server Error",
       httpCode: 500,
     });
