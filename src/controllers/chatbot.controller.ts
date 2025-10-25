@@ -6,9 +6,10 @@ import Course from "../models/course.model";
 
 /* ---------------------- FEATURED CHATBOTS ---------------------- */
 const featuredChatBotsId = [
-  "504e5cb2-2002-445b-8b51-05c066483149",
-  "9da92dac-8b29-4506-b1ae-a4c0391c1506",
-  "98be0433-5156-488e-bac7-1a9286230227",
+  "b4b71b2d-42e8-48b2-83f5-e6763e5abcca",
+  "aa7a50c3-95f3-457f-9667-c7fe8a56f821",
+  "05c0b3c6-d6f6-4bbe-a1b2-d6797d8229eb",
+  "96cbf19f-66f0-422f-87a3-4ca1e5768a68",
 ];
 
 export const featuredChatBotController = async (
@@ -50,7 +51,6 @@ export const recommendedChatBotController = async (
 ) => {
   try {
     const studentId = req.userId;
-    console.log("Student ID:", studentId);
 
     if (!studentId) {
       return Responder(res, {
@@ -60,28 +60,34 @@ export const recommendedChatBotController = async (
       });
     }
 
-    const enrollments = await Enrollment.findAll({
-      where: { userId: studentId, status: "enrolled" },
-      attributes: ["courseId"],
-    });
+    // const enrollments = await Enrollment.findAll({
+    //   where: { userId: studentId, status: "enrolled" },
+    //   attributes: ["courseId"],
+    // });
 
-    if (enrollments.length === 0) {
-      return Responder(res, {
-        message: "No enrolled courses found for this student.",
-        httpCode: 404,
-      });
-    }
+    // if (enrollments.length === 0) {
+    //   return Responder(res, {
+    //     message: "No enrolled courses found for this student.",
+    //     httpCode: 404,
+    //   });
+    // }
 
-    const courseIds = enrollments.map((enroll) => enroll.courseId);
+    // const courseIds = enrollments.map((enroll) => enroll.courseId);
 
     const recommendedBots = await Bots.findAll({
-      where: { courseId: courseIds },
-      attributes: ["id", "name", "description", "level", "numInteractions"],
       include: [
         {
           model: Course,
           as: "course",
-          attributes: ["id", "name", "description"],
+          required: true,
+          include: [
+            {
+              model: Enrollment,
+              required: true,
+              where: { userId: studentId, status: "enrolled" },
+              attributes: [],
+            },
+          ],
         },
       ],
     });
