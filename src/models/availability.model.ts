@@ -3,11 +3,13 @@ import { sequelize } from "../config/db.config";
 
 type DayOfWeek = import("./dayofWeek").default;
 type InstructorProfiles = import("./instructor.model").default;
+type User = import("./user.model").default;
 type AvailabilityTimeSlot = import("./timeSlot.model").default;
 
 interface InstructorAvailabilityAttributes {
   id: string;
   instructorProfileId: string;
+  userId: string;
   dayOfWeekId: number;
   isAvailable: boolean;
 }
@@ -24,11 +26,13 @@ class Availability
 {
   public id!: string;
   public instructorProfileId!: string;
+  public userId!: string;
   public dayOfWeekId!: number;
   public isAvailable!: boolean;
 
   // --- New association properties ---
   public instructorProfile?: InstructorProfiles;
+  public userProfile?: User;
   public dayOfWeek?: DayOfWeek;
   public timeSlots?: AvailabilityTimeSlot[];
 
@@ -47,6 +51,10 @@ Availability.init(
       primaryKey: true,
     },
     instructorProfileId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
+    userId: {
       type: DataTypes.UUID,
       allowNull: false,
     },

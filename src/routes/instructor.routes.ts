@@ -4,6 +4,7 @@ import { validateData } from "../middlewares/zod.middleware";
 import {
   instructorOnboardController,
   featuredInstructorController,
+  getInstructorDataController,
 } from "../controllers/instructor.controller";
 import { instructorOnboardSchema } from "../utils/validator";
 
@@ -19,5 +20,8 @@ router.post(
 
 // For Featured Instructors
 router.get("/featured", featuredInstructorController);
+
+// For getting instructor data to store on context
+router.get("/me", authMiddleware, getInstructorDataController);
 
 export default router;
