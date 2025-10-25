@@ -1,12 +1,15 @@
 import { Request, Response } from "express";
 import Responder from "../utils/responder";
 import Bots from "../models/bot.model";
+import Enrollment from "../models/enrollment.model";
+import Course from "../models/course.model";
 
+/* ---------------------- FEATURED CHATBOTS ---------------------- */
 const featuredChatBotsId = [
-  "76441b17-1a55-4600-97bd-9ced218b2490",
-  "b2274158-6625-47f7-81de-b59cfbc43018",
+  "b4b71b2d-42e8-48b2-83f5-e6763e5abcca",
+  "aa7a50c3-95f3-457f-9667-c7fe8a56f821",
+  "05c0b3c6-d6f6-4bbe-a1b2-d6797d8229eb",
   "96cbf19f-66f0-422f-87a3-4ca1e5768a68",
-  "464c2262-7034-4ec6-843f-fc5875afe798",
 ];
 
 export const featuredChatBotController = async (
@@ -15,9 +18,7 @@ export const featuredChatBotController = async (
 ) => {
   try {
     const featuredChatBots = await Bots.findAll({
-      where: {
-        id: featuredChatBotsId,
-      },
+      where: { id: featuredChatBotsId },
       attributes: ["id", "name", "description", "level", "numInteractions"],
     });
 
@@ -30,13 +31,81 @@ export const featuredChatBotController = async (
 
     return Responder(res, {
       message: "Featured chatbots fetched successfully",
-      data: {
-        featuredChatBots,
-      },
+      data: { featuredChatBots },
       httpCode: 200,
     });
   } catch (error) {
     console.error(error);
+    return Responder(res, {
+      error: "INTERNAL_SERVER_ERROR",
+      message: "An unexpected error occurred on the server.",
+      httpCode: 500,
+    });
+  }
+};
+
+/* ------------------- RECOMMENDED CHATBOTS ------------------- */
+export const recommendedChatBotController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const studentId = req.userId;
+
+    if (!studentId) {
+      return Responder(res, {
+        error: "Unauthorized",
+        message: "User not authenticated.",
+        httpCode: 401,
+      });
+    }
+
+    // const enrollments = await Enrollment.findAll({
+    //   where: { userId: studentId, status: "enrolled" },
+    //   attributes: ["courseId"],
+    // });
+
+    // if (enrollments.length === 0) {
+    //   return Responder(res, {
+    //     message: "No enrolled courses found for this student.",
+    //     httpCode: 404,
+    //   });
+    // }
+
+    // const courseIds = enrollments.map((enroll) => enroll.courseId);
+
+    const recommendedBots = await Bots.findAll({
+      include: [
+        {
+          model: Course,
+          as: "course",
+          required: true,
+          include: [
+            {
+              model: Enrollment,
+              required: true,
+              where: { userId: studentId, status: "enrolled" },
+              attributes: [],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (recommendedBots.length === 0) {
+      return Responder(res, {
+        message: "No recommended chatbots found for enrolled courses.",
+        httpCode: 404,
+      });
+    }
+
+    return Responder(res, {
+      message: "Recommended chatbots fetched successfully.",
+      data: { recommendedBots },
+      httpCode: 200,
+    });
+  } catch (error) {
+    console.error("Error fetching recommended chatbots:", error);
     return Responder(res, {
       error: "INTERNAL_SERVER_ERROR",
       message: "An unexpected error occurred on the server.",
