@@ -9,6 +9,7 @@ import cookieParser from "cookie-parser";
 import enrollmentRoutes from "./routes/enrollment.routes";
 import courseRoutes from "./routes/course.routes";
 import chatBotRoutes from "./routes/chatbot.routes";
+import studentRoutes from "./routes/student.routes";
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api/v1/enrollment", enrollmentRoutes);
 app.use("/api/v1/course", courseRoutes);
 app.use("/api/v1/instructor", instructorRoutes);
 app.use("/api/v1/bot", chatBotRoutes);
+app.use("/api/v1/student", studentRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("<h1>Eduserve Backend </h1>");

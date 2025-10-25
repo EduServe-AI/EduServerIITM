@@ -102,6 +102,20 @@ export const setUpAssociations = () => {
     as: "instructorProfile",
   });
 
+  // -------------------- Relationship between User and SKills Table for instructors --------
+
+  User.hasMany(Skill, {
+    foreignKey: "userId",
+    as: "skills",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  Skill.belongsTo(User, {
+    foreignKey: "userId",
+    as: "instructor",
+  });
+
   // Add new association for Availability
   // InstructorProfiles.hasMany(Availability, {
   //   foreignKey: "instructorProfileId",
@@ -177,6 +191,19 @@ export const setUpAssociations = () => {
   Availability.belongsTo(InstructorProfiles, {
     foreignKey: "instructorProfileId",
     as: "instructorProfile",
+  });
+
+  // A user/instructor can have multiple availability records ( onre for each day they work )
+  User.hasMany(Availability, {
+    foreignKey: "userId",
+    as: "useravailabilities",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  Availability.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
   });
 
   // A DayOfWeek can be associated with many availability records

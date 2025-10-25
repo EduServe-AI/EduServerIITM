@@ -85,6 +85,7 @@ export const instructorOnboardController = async (
         name: subject,
         instructorProfileId: instructorProfile.id,
         courseId: courseId,
+        userId: req.userId!,
       };
     });
 
@@ -144,6 +145,7 @@ export const instructorOnboardController = async (
           instructorProfileId: instructorProfile.id,
           dayOfWeekId: dayOfWeekId,
           isAvailable: dayData.isEnabled,
+          userId: req.userId!,
         },
         { transaction }
       );
@@ -200,7 +202,7 @@ export const featuredInstructorController = async (
         {
           model: User,
           as: "user",
-          attributes: ["id", "username", "profileUrl"],
+          attributes: ["id", "username"],
         },
         {
           model: Skill,
@@ -217,6 +219,52 @@ export const featuredInstructorController = async (
       data: {
         featuredInstructors,
       },
+    });
+  } catch (error) {
+    console.error(error);
+    return Responder(res, {
+      error: error,
+      message: "InternaL Server Error",
+      httpCode: 500,
+    });
+  }
+};
+
+export const getInstructorDataController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const instructor = await User.findByPk(req.userId, {
+      include: [
+        {
+          model: InstructorProfiles,
+          attributes: [
+            "iitmProfileUrl",
+            "cgpa",
+            "level",
+            "bio",
+            "githubUrl",
+            "linkedinUrl",
+            "basePrice",
+          ],
+          as: "instructorProfile",
+          include: [
+            {
+              model: Skill,
+              as: "skills",
+            },
+          ],
+        },
+      ],
+    });
+
+    return Responder(res, {
+      message: "Instructor Data Fetched sucessfully",
+      data: {
+        instructor: instructor,
+      },
+      httpCode: 200,
     });
   } catch (error) {
     console.error(error);
