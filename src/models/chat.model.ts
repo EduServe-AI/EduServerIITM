@@ -5,6 +5,7 @@ import { DataTypes, Model, Optional, Association } from "sequelize";
 // Type imports to avoid circular dependencies
 type Bot = import("./bot.model").default;
 type User = import("./user.model").default;
+type ChatMessages = import("./chatMessage.model").default;
 
 interface ChatCreationAttributes
   extends Optional<
@@ -20,6 +21,7 @@ class Chats
   public botId!: string;
   public chatId!: string;
   public userId!: string;
+  public title?: string | undefined;
   public isDeleted?: boolean | undefined;
   public lastInteractionTime?: Date | undefined;
 
@@ -30,11 +32,13 @@ class Chats
   // Association properties
   public bot?: Bot;
   public user?: User;
+  public messages?: ChatMessages[];
 
   // Static associations
   public static associations: {
     bot: Association<Chats, Bot>;
     user: Association<Chats, User>;
+    messages: Association<Chats, ChatMessages>;
   };
 }
 
@@ -57,6 +61,10 @@ Chats.init(
     userId: {
       type: DataTypes.UUID,
       allowNull: false,
+    },
+    title: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     lastInteractionTime: {
       type: DataTypes.DATE,

@@ -11,6 +11,7 @@ import DayOfWeek from "./dayofWeek";
 import AvailabilityTimeSlot from "./timeSlot.model";
 import Bots from "./bot.model";
 import Chats from "./chat.model";
+import ChatMessages from "./chatMessage.model";
 
 export const syncModels = async () => {
   await User.sync({ alter: true });
@@ -26,4 +27,5 @@ export const syncModels = async () => {
   await AvailabilityTimeSlot.sync({ alter: true });
   await Bots.sync({ alter: true });
   await Chats.sync({ alter: true });
+  await ChatMessages.sync({ alter: true });
 };

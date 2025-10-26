@@ -6,6 +6,7 @@ import { DataTypes, Model, Optional, Association } from "sequelize";
 // Type imports to avoid circular dependencies
 type Course = import("./course.model").default;
 type Chat = import("./chat.model").default;
+type ChatMessages = import("./chatMessage.model").default;
 
 interface BotCreationAttributes
   extends Optional<
@@ -32,11 +33,13 @@ class Bots
   // Association properties
   public course?: Course;
   public chats?: Chat[];
+  public allmessages?: ChatMessages[];
 
   // Static associations
   public static associations: {
     course: Association<Bots, Course>;
     chats: Association<Bots, Chat>;
+    allmessages: Association<Bots, ChatMessages>;
   };
 }
 

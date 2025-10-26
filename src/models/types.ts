@@ -66,6 +66,20 @@ export interface ChatAttributes {
   botId: string;
   chatId: string;
   userId: string;
+  title?: string;
   isDeleted?: boolean;
   lastInteractionTime?: Date;
+}
+
+export interface ChatMessagesAttributes {
+  id: string;
+  botId: string;
+  chatId: string;
+  messageId: string;
+  content: string;
+  sender: "bot" | "user";
+  rating: number;
+  userId: string;
+  username: string;
+  isDeleted?: boolean;
 }

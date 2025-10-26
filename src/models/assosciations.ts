@@ -11,6 +11,7 @@ import DayOfWeek from "./dayofWeek";
 import AvailabilityTimeSlot from "./timeSlot.model";
 import Bots from "./bot.model";
 import Chats from "./chat.model";
+import ChatMessages from "./chatMessage.model";
 
 // setup associations
 export const setUpAssociations = () => {
@@ -265,6 +266,45 @@ export const setUpAssociations = () => {
   });
 
   Chats.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+  });
+
+  // ------------------- Relationship between Chats and ChatsMessages ------------
+  Chats.hasMany(ChatMessages, {
+    foreignKey: "chatId",
+    as: "messages",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  ChatMessages.belongsTo(Chats, {
+    foreignKey: "chatId",
+    as: "chat",
+  });
+
+  // ------------------ Relationship between Bots and ChatMessages ------------
+  Bots.hasMany(ChatMessages, {
+    foreignKey: "botId",
+    as: "allmessages",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  ChatMessages.belongsTo(Bots, {
+    foreignKey: "botId",
+    as: "bot",
+  });
+
+  // ----------------- Relationship between User and ChatMessages --------------
+  User.hasMany(ChatMessages, {
+    foreignKey: "userId",
+    as: "allmessages",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  ChatMessages.belongsTo(User, {
     foreignKey: "userId",
     as: "user",
   });
