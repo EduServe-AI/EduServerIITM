@@ -60,3 +60,12 @@ export interface BotAttributes {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export interface ChatAttributes {
+  id: string;
+  botId: string;
+  chatId: string;
+  userId: string;
+  isDeleted?: boolean;
+  lastInteractionTime?: Date;
+}
