@@ -57,6 +57,7 @@ export interface BotAttributes {
   numInteractions?: number;
   level: LevelName;
   is_active?: boolean;
+  isFeatured?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

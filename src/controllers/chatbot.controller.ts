@@ -5,12 +5,6 @@ import Enrollment from "../models/enrollment.model";
 import Course from "../models/course.model";
 
 /* ---------------------- FEATURED CHATBOTS ---------------------- */
-const featuredChatBotsId = [
-  "b4b71b2d-42e8-48b2-83f5-e6763e5abcca",
-  "aa7a50c3-95f3-457f-9667-c7fe8a56f821",
-  "05c0b3c6-d6f6-4bbe-a1b2-d6797d8229eb",
-  "96cbf19f-66f0-422f-87a3-4ca1e5768a68",
-];
 
 export const featuredChatBotController = async (
   req: Request,
@@ -18,7 +12,7 @@ export const featuredChatBotController = async (
 ) => {
   try {
     const featuredChatBots = await Bots.findAll({
-      where: { id: featuredChatBotsId },
+      where: { isFeatured: true },
       attributes: ["id", "name", "description", "level", "numInteractions"],
     });
 
@@ -84,6 +78,7 @@ export const recommendedChatBotController = async (
             {
               model: Enrollment,
               required: true,
+              as: "enrollments",
               where: { userId: studentId, status: "enrolled" },
               attributes: [],
             },
