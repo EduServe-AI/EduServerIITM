@@ -1,13 +1,10 @@
 import { Router } from "express";
 import authMiddleware from "../middlewares/auth.middleware";
-// import {} from "../controllers/chat.controller";
+import { createChatController } from "../controllers/chat.controller";
 
 const router = Router();
 
-// For Featured ChatBots
-// router.get();
-
-// New Route for Recommended ChatBots
-// router.get();
+// For Creating new chat
+router.post("/create", authMiddleware, createChatController);
 
 export default router;

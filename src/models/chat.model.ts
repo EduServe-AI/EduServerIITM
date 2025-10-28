@@ -19,6 +19,7 @@ class Chats
 {
   public id!: string;
   public botId!: string;
+  public botName!: string;
   public chatId!: string;
   public userId!: string;
   public title?: string | undefined;
@@ -52,6 +53,10 @@ Chats.init(
     },
     botId: {
       type: DataTypes.UUID,
+      allowNull: false,
+    },
+    botName: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
     chatId: {
