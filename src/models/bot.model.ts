@@ -23,6 +23,7 @@ class Bots
   public level!: LevelName;
   public numInteractions!: number;
   public is_active?: boolean;
+  public is_featured?: boolean;
 
   // Optional: timestamps
   public readonly createdAt!: Date;
@@ -69,6 +70,10 @@ Bots.init(
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
+    },
+    is_featured: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
   },
   {
