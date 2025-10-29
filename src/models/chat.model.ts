@@ -20,7 +20,6 @@ class Chats
   public id!: string;
   public botId!: string;
   public botName!: string;
-  public chatId!: string;
   public userId!: string;
   public title?: string | undefined;
   public isDeleted?: boolean | undefined;
@@ -59,10 +58,6 @@ Chats.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    chatId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
     userId: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -87,10 +82,7 @@ Chats.init(
     tableName: "chats",
     indexes: [
       {
-        fields: ["botId", "chatId"],
-      },
-      {
-        fields: ["chatId"],
+        fields: ["botId", "id"],
       },
       {
         fields: ["botId"],

@@ -56,7 +56,7 @@ ChatMessages.init(
       allowNull: false,
     },
     chatId: {
-      // foreignkey referencing the column chatId in the chats table
+      // foreignkey referencing the column Id in the chats table
       type: DataTypes.UUID,
       allowNull: false,
     },

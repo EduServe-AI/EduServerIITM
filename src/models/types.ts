@@ -66,7 +66,6 @@ export interface ChatAttributes {
   id: string;
   botId: string;
   botName: string;
-  chatId: string;
   userId: string;
   title?: string;
   isDeleted?: boolean;
