@@ -12,7 +12,7 @@ export const featuredChatBotController = async (
 ) => {
   try {
     const featuredChatBots = await Bots.findAll({
-      where: { isFeatured: true },
+      where: { is_featured: true },
       attributes: ["id", "name", "description", "level", "numInteractions"],
     });
 
@@ -101,6 +101,48 @@ export const recommendedChatBotController = async (
     });
   } catch (error) {
     console.error("Error fetching recommended chatbots:", error);
+    return Responder(res, {
+      error: "INTERNAL_SERVER_ERROR",
+      message: "An unexpected error occurred on the server.",
+      httpCode: 500,
+    });
+  }
+};
+
+// -------------------- Making a chatbot Featured (temporary)-----------------------------------
+export const makeBotFeaturedController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { botName } = req.body;
+
+    if (!botName) {
+      return Responder(res, {
+        error: "Bot Name required",
+        httpCode: 404,
+      });
+    }
+
+    const bot = await Bots.findOne({ where: { name: botName } });
+
+    if (!bot) {
+      return Responder(res, {
+        error: "Bot Not Found with the given id",
+        httpCode: 404,
+      });
+    }
+
+    await bot.update({ is_featured: true });
+    await bot.save();
+
+    return Responder(res, {
+      message: "Made the Bot Featured",
+      httpCode: 200,
+      data: bot,
+    });
+  } catch (error) {
+    console.error("Error making chatbot featured ", error);
     return Responder(res, {
       error: "INTERNAL_SERVER_ERROR",
       message: "An unexpected error occurred on the server.",
