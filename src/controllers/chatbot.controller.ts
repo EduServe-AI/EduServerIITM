@@ -5,12 +5,6 @@ import Enrollment from "../models/enrollment.model";
 import Course from "../models/course.model";
 
 /* ---------------------- FEATURED CHATBOTS ---------------------- */
-const featuredChatBotsId = [
-  "b4b71b2d-42e8-48b2-83f5-e6763e5abcca",
-  "aa7a50c3-95f3-457f-9667-c7fe8a56f821",
-  "05c0b3c6-d6f6-4bbe-a1b2-d6797d8229eb",
-  "96cbf19f-66f0-422f-87a3-4ca1e5768a68",
-];
 
 export const featuredChatBotController = async (
   req: Request,
@@ -18,7 +12,7 @@ export const featuredChatBotController = async (
 ) => {
   try {
     const featuredChatBots = await Bots.findAll({
-      where: { id: featuredChatBotsId },
+      where: { is_featured: true },
       attributes: ["id", "name", "description", "level", "numInteractions"],
     });
 
@@ -84,6 +78,7 @@ export const recommendedChatBotController = async (
             {
               model: Enrollment,
               required: true,
+              as: "enrollments",
               where: { userId: studentId, status: "enrolled" },
               attributes: [],
             },
@@ -106,6 +101,48 @@ export const recommendedChatBotController = async (
     });
   } catch (error) {
     console.error("Error fetching recommended chatbots:", error);
+    return Responder(res, {
+      error: "INTERNAL_SERVER_ERROR",
+      message: "An unexpected error occurred on the server.",
+      httpCode: 500,
+    });
+  }
+};
+
+// -------------------- Making a chatbot Featured (temporary)-----------------------------------
+export const makeBotFeaturedController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { botName } = req.body;
+
+    if (!botName) {
+      return Responder(res, {
+        error: "Bot Name required",
+        httpCode: 404,
+      });
+    }
+
+    const bot = await Bots.findOne({ where: { name: botName } });
+
+    if (!bot) {
+      return Responder(res, {
+        error: "Bot Not Found with the given id",
+        httpCode: 404,
+      });
+    }
+
+    await bot.update({ is_featured: true });
+    await bot.save();
+
+    return Responder(res, {
+      message: "Made the Bot Featured",
+      httpCode: 200,
+      data: bot,
+    });
+  } catch (error) {
+    console.error("Error making chatbot featured ", error);
     return Responder(res, {
       error: "INTERNAL_SERVER_ERROR",
       message: "An unexpected error occurred on the server.",
