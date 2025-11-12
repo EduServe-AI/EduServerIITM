@@ -1,6 +1,7 @@
 // models/enrollment.model.ts
 import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../config/db.config";
+import sequelize from "../config/db.config";
+
 import { EnrollmentAttributes } from "./types";
 import { Term, CourseStatus } from "../types/enrollment";
 

@@ -1,6 +1,7 @@
 import { CourseName } from "../types/course";
 import { LevelName } from "../types/level";
 import { Term, CourseStatus } from "../types/enrollment";
+import { DataTypes } from "sequelize";
 
 export interface UserAttributes {
   id: string;
@@ -76,7 +77,6 @@ export interface ChatMessagesAttributes {
   id: string;
   botId: string;
   chatId: string;
-  messageId: string;
   content: string;
   sender: "bot" | "user";
   rating: number;
@@ -84,3 +84,14 @@ export interface ChatMessagesAttributes {
   username: string;
   isDeleted?: boolean;
 }
+
+export interface KnowledgeBaseAttributes {
+  id: string;
+  content: string;
+  embedding: number[];
+  courseId: string;
+  source: string;
+  weekNumber?: number | null;
+}
+
+// Defining a custom

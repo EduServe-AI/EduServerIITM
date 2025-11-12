@@ -12,6 +12,8 @@ import AvailabilityTimeSlot from "./timeSlot.model";
 import Bots from "./bot.model";
 import Chats from "./chat.model";
 import ChatMessages from "./chatMessage.model";
+// import KnowledgeBase from "./knowledgeBase.model";
+import { initializeKnowledgeBase } from "../services/knowledgeBase.service";
 
 export const syncModels = async () => {
   await User.sync({ alter: true });
@@ -28,4 +30,7 @@ export const syncModels = async () => {
   await Bots.sync({ alter: true });
   await Chats.sync({ alter: true });
   await ChatMessages.sync({ alter: true });
+  // await KnowledgeBase.sync({ alter: true });
+
+  await initializeKnowledgeBase();
 };

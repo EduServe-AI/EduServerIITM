@@ -1,4 +1,4 @@
-import { sequelize } from "../config/db.config";
+import sequelize from "../config/db.config";
 import { LevelName } from "../types/level";
 import { BotAttributes } from "./types";
 import { DataTypes, Model, Optional, Association } from "sequelize";

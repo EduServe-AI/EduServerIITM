@@ -1,4 +1,5 @@
-import { sequelize } from "../config/db.config";
+import sequelize from "../config/db.config";
+
 import { ChatMessagesAttributes } from "./types";
 import { DataTypes, Model, Optional, Association } from "sequelize";
 
@@ -17,7 +18,6 @@ class ChatMessages
   public id!: string;
   public botId!: string;
   public chatId!: string;
-  public messageId!: string;
   public isDeleted?: boolean | undefined;
   public content!: string;
   public rating!: number;
@@ -57,10 +57,6 @@ ChatMessages.init(
     },
     chatId: {
       // foreignkey referencing the column Id in the chats table
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
-    messageId: {
       type: DataTypes.UUID,
       allowNull: false,
     },

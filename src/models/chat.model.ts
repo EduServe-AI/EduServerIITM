@@ -1,4 +1,4 @@
-import { sequelize } from "../config/db.config";
+import sequelize from "../config/db.config";
 import { ChatAttributes } from "./types";
 import { DataTypes, Model, Optional, Association } from "sequelize";
 
@@ -72,7 +72,7 @@ Chats.init(
     },
     isDeleted: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,
+      defaultValue: true,
     },
   },
   {

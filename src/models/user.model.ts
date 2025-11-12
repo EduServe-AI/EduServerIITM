@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional, Association } from "sequelize";
-import { sequelize } from "../config/db.config";
+import sequelize from "../config/db.config";
+
 import { UserAttributes } from "./types";
 import Course from "./course.model";
 import Enrollment from "./enrollment.model";
