@@ -174,6 +174,11 @@ export const generateResponseController = async (
         as: "user",
         attributes: ["id", "username"],
       },
+      {
+        model: Bots,
+        as: "bot",
+        attributes: ["id", "name", "courseId", "level", "numInteractions"],
+      },
     ],
   });
   if (!chat) {
@@ -216,26 +221,6 @@ export const generateResponseController = async (
 
     // Helper function we pass chatId , and well get an LLM Object loaded with full context
     const stream = await prepareLLMChat(chat, userMessage.content);
-
-    // const history = await ChatMessages.findAll({
-    //   where: { chatId: chatId },
-    //   order: [["createdAt", "ASC"]],
-    //   limit: 10, // Get the last 10 messages
-    // });
-
-    // const model = genAI.getGenerativeModel({
-    //   model: "gemini-2.5-flash",
-    //   systemInstruction: bot.description,
-    // });
-
-    // const llmChat = model.startChat({
-    //   history: history.map((msg) => ({
-    //     role: msg.sender === "user" ? "user" : "model",
-    //     parts: [{ text: msg.content }],
-    //   })),
-    // });
-
-    // const { stream } = await llm.sendMessageStream(userMessage.content);
 
     // Set headers for streaming
     res.setHeader("Content-Type", "text/plain");

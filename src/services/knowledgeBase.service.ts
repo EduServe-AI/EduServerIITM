@@ -1,3 +1,4 @@
+import { QueryTypes } from "sequelize";
 import sequelize from "../config/db.config";
 import pgvector from "pgvector";
 
@@ -46,6 +47,17 @@ const INSERT_CHUNK = `
        :source_filename,
        :week_number
      )
+`;
+
+// SQL Query to retreive the chunk from the knowledgeBase
+const RETREIVE_CHUNK = `
+
+      SELECT content , source_filename
+      FROM "knowledgeBase"
+      WHERE "course_id" = :courseId
+      ORDER BY "embedding" <=> :embedding
+      LIMIT :limit
+
 `;
 
 export const initializeKnowledgeBase = async () => {
@@ -117,6 +129,31 @@ export const insertKnowledgeChunk = async (chunk: chunkType) => {
       "❌ Error in inserting chunks into knowledge_base table: ",
       error
     );
+    throw new Error(error);
+  }
+};
+
+export const findSimilarChunks = async (
+  embedding: number[],
+  courseId: string,
+  limit: number = 5
+) => {
+  // Formatting the embedding vector for a raw sql query
+  const embeddingSql = pgvector.toSql(embedding);
+
+  try {
+    const results = await sequelize.query(RETREIVE_CHUNK, {
+      replacements: {
+        courseId: courseId,
+        embedding: embeddingSql,
+        limit: limit,
+      },
+      type: QueryTypes.SELECT,
+    });
+
+    return results as { content: string; source_filename: string }[];
+  } catch (error: any) {
+    console.error("❌ Error in retreiving chunks from knowledge_base ", error);
     throw new Error(error);
   }
 };

@@ -1,11 +1,15 @@
 import { TaskType } from "@google/generative-ai";
 import Bots from "../models/bot.model";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
-import { AzureBlobStorageContainerLoader } from "@langchain/community/document_loaders/web/azure_blob_storage_container";
 import config from "../config/constants";
 import { AzureBlobStorageFileLoader } from "@langchain/community/document_loaders/web/azure_blob_storage_file";
 
-export const createSystemPrompt = async (botId: string, username: string) => {
+export const createSystemPrompt = async (
+  botId: string,
+  username: string,
+  contextText: string,
+  sourcesString: string
+) => {
   const bot = await Bots.findByPk(botId);
 
   if (!bot) throw new Error("Bot Not Found brother");
@@ -27,10 +31,18 @@ export const createSystemPrompt = async (botId: string, username: string) => {
 
   - 1 . **Answering** : Your answers must be precise, accurate, and broken down into short, easy-to-understand steps. Use numbered lists or bullet points to explain complex topics.
   - 2. **Domain** : You must *only* answer questions related to your subject, "${bot.name}", and the IITM BS programme. Do not answer general knowledge questions, questions about other subjects, or personal opinions.
-  - 3. **Out-of-Domain Response:** If the user asks a question outside your domain, you must politely decline. You can be slightly humorous.
+  - 3. **Context** : Use your answers on the provided context chunks below by considering relevant chunks . Reduce the usage of outside knowledge.
+  - 4. **Citation** : At the end of your answer, you MUST cite the source filename your answer was based on. List them under a 'Sources:' heading.
+  - 5. **Out-of-Domain Response:** If the user asks a question outside your domain, you must politely decline. You can be slightly humorous.
 
   </Instructions>
 
+  \n### Context Chunks ### :
+  ${contextText}
+
+  "\n### Available Source(s) for Citation ###",
+    // This tells the AI what filenames it is allowed to cite
+    ${sourcesString},
 
    
   \n### Example Out-of-Domain Responses ### :
@@ -91,4 +103,30 @@ export const documentLoader = async (courseName: string, blobName?: string) => {
   });
 
   return loader;
+};
+
+export const formatContext = async (
+  contextChunks: {
+    content: string;
+    source_filename: string;
+  }[]
+) => {
+  const contextText = contextChunks
+    .map(
+      (chunk, index) => `
+  -------
+  [Context Chunk ${index + 1}]
+  ${chunk.content}
+  -------
+  `
+    )
+    .join("\n");
+
+  // Extracting a unique list of source files
+  const sourceFiles = [
+    ...new Set(contextChunks.map((chunk) => chunk.source_filename)),
+  ];
+  const sourcesString = sourceFiles.join(", ");
+
+  return { contextText, sourcesString };
 };

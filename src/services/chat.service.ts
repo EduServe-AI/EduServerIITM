@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import Chats from "../models/chat.model";
 import Groq from "groq-sdk";
-import { createSystemPrompt } from "../utils/llm";
+import { createSystemPrompt, Embedder, formatContext } from "../utils/llm";
+import { findSimilarChunks } from "./knowledgeBase.service";
 
 type Chat = import("../models/chat.model").default;
 
@@ -9,8 +9,8 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export const prepareLLMChat = async (chat: Chat, userMessage: string) => {
-  if (!chat) {
-    throw new Error("Chat Id required");
+  if (!chat || !chat.bot) {
+    throw new Error("Chat Id with bot info is required");
   }
 
   const user = chat.user;
@@ -28,7 +28,28 @@ export const prepareLLMChat = async (chat: Chat, userMessage: string) => {
     throw new Error("No message history found");
   }
 
-  const systemPrompt = await createSystemPrompt(chat.botId, user.username!);
+  // Generating the embeddings for users query
+  const userQueryEmbedding = await Embedder(userMessage, "query");
+
+  // Retrieving the relevant contexts
+  const courseId = chat.bot.courseId;
+  if (!courseId) {
+    throw new Error("Bot courseId is required for context retrieval");
+  }
+
+  const contextChunks = await findSimilarChunks(userQueryEmbedding, courseId);
+
+  const contextResult = await formatContext(contextChunks);
+  const { contextText, sourcesString } = contextResult;
+
+  console.log("context chunks", contextChunks);
+
+  const systemPrompt = await createSystemPrompt(
+    chat.botId,
+    user.username!,
+    contextText,
+    sourcesString
+  );
 
   return groq.chat.completions.create({
     model: "openai/gpt-oss-20b",
