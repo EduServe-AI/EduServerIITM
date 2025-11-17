@@ -42,8 +42,6 @@ export const prepareLLMChat = async (chat: Chat, userMessage: string) => {
   const contextResult = await formatContext(contextChunks);
   const { contextText, sourcesString } = contextResult;
 
-  console.log("context chunks", contextChunks);
-
   const systemPrompt = await createSystemPrompt(
     chat.botId,
     user.username!,

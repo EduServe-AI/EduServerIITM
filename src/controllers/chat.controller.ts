@@ -254,8 +254,8 @@ export const generateResponseController = async (
     console.error("Error generating message:", error);
     // If we've already started streaming, we can't send a JSON error
     if (!res.headersSent) {
+      console.error("Internal server error", error);
       return Responder(res, {
-        error: error,
         message: "Internal Server Error",
         httpCode: 500,
       });
