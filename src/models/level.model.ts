@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../config/db.config";
+import sequelize from "../config/db.config";
+
 import { LevelAttributes } from "./types";
 
 interface LevelCreationAttributes

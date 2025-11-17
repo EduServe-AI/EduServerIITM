@@ -1,7 +1,7 @@
 // models/language.model.ts
 
 import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../config/db.config";
+import sequelize from "../config/db.config";
 
 interface LanguageAttributes {
   id: string;

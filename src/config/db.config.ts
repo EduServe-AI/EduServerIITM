@@ -1,6 +1,7 @@
 import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
 import path from "path";
+import pgvector from "pgvector/sequelize";
 
 dotenv.config({ path: path.resolve(__dirname, "../../.env.local") });
 
@@ -14,10 +15,28 @@ const getSslConfig = () => {
   return false; // Allow disabling for local development
 };
 
-export const sequelize = new Sequelize(process.env.DATABASE_URL as string, {
+const sequelize = new Sequelize(process.env.DATABASE_URL as string, {
   dialect: "postgres",
   logging: false,
   dialectOptions: {
     ssl: getSslConfig(),
   },
 });
+
+const initialize = async () => {
+  try {
+    // Create vector extension if it doesn't exist
+    await sequelize.query("CREATE EXTENSION IF NOT EXISTS vector");
+
+    pgvector.registerTypes(Sequelize);
+
+    console.log("Vector extension and type registered successfully");
+  } catch (error) {
+    console.error("Error initializing vector support:", error);
+  }
+};
+
+// Initialize vector support
+initialize();
+
+export default sequelize;

@@ -1,7 +1,7 @@
 // models/skill.model.ts
 
 import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../config/db.config";
+import sequelize from "../config/db.config";
 
 interface SkillAttributes {
   id: string;

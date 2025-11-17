@@ -1,4 +1,4 @@
-import { sequelize } from "../config/db.config";
+import sequelize from "../config/db.config";
 import { LevelName } from "../types/level";
 import { CourseName } from "../types/course";
 import { CourseAttributes } from "./types";

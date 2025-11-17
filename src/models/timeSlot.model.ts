@@ -1,7 +1,7 @@
 // models/TimeSlot.ts
 
 import { Association, DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../config/db.config";
+import sequelize from "../config/db.config";
 
 type Availability = import("./availability.model").default;
 

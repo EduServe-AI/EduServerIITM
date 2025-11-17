@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import Responder from "../utils/responder";
 import { findUserById } from "../services/user.service";
 import User from "../models/user.model";
-import { sequelize } from "../config/db.config";
+import sequelize from "../config/db.config";
+
 import InstructorProfiles from "../models/instructor.model";
 import { OnboardingSchemaType } from "../utils/validator";
 import { getCourseId } from "../services/course.service";
@@ -210,7 +211,7 @@ export const featuredInstructorController = async (
           attributes: ["name"],
         },
       ],
-      attributes: ["level", "bio", "basePrice", "id"],
+      attributes: ["level", "bio", "basePrice", "id", "instructorId"],
     });
 
     return Responder(res, {

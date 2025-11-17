@@ -1,7 +1,8 @@
 // models/instructor.model.ts
 
 import { DataTypes, Model, Optional, Association } from "sequelize";
-import { sequelize } from "../config/db.config";
+import sequelize from "../config/db.config";
+
 import type Skill from "./skill.model";
 import type UserLanguage from "./userLanguage.model";
 import { LevelName } from "../types/level";

@@ -1,5 +1,6 @@
 import config from "./config/constants";
-import { sequelize } from "./config/db.config";
+import sequelize from "./config/db.config";
+
 import { syncModels } from "./models";
 import { populateCoursesIfEmpty } from "./scripts/populateCourses";
 import { populateLevelsIfEmpty } from "./scripts/populateLevels";
@@ -19,6 +20,7 @@ sequelize
     await populateLanguagesIfEmpty();
     await populateDaysIfEmpty();
     await populateBotsIfEmpty();
+    // await populateEmbeddingsIfEmpty();
   })
   .catch((err) => {
     console.error("❌ DB Connection failed:", err);
@@ -28,6 +30,7 @@ import app from "./app";
 import { populateLanguagesIfEmpty } from "./scripts/populateLanguages";
 import { populateDaysIfEmpty } from "./scripts/populateDays";
 import { populateBotsIfEmpty } from "./scripts/populateBots";
+import { populateEmbeddingsIfEmpty } from "./scripts/populateEmbeddings";
 // App connection with express
 app.listen(config.port, () => {
   console.log(`🚀 Server running on http://localhost:${config.port}`);

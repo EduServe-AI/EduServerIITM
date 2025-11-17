@@ -10,6 +10,8 @@ import UserLanguage from "./userLanguage.model";
 import DayOfWeek from "./dayofWeek";
 import AvailabilityTimeSlot from "./timeSlot.model";
 import Bots from "./bot.model";
+import Chats from "./chat.model";
+import ChatMessages from "./chatMessage.model";
 
 // setup associations
 export const setUpAssociations = () => {
@@ -240,6 +242,71 @@ export const setUpAssociations = () => {
   Bots.belongsTo(Course, {
     foreignKey: "courseId",
     as: "course",
+  });
+
+  // ------------------- Relationship between Chatbots and chats --------------------
+  Bots.hasMany(Chats, {
+    foreignKey: "botId",
+    as: "chats",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  Chats.belongsTo(Bots, {
+    foreignKey: "botId",
+    as: "bot",
+  });
+
+  // ------------------- Relationship between User and Chats --------------------
+  User.hasMany(Chats, {
+    foreignKey: "userId",
+    as: "chats",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  Chats.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+  });
+
+  // ------------------- Relationship between Chats and ChatsMessages ------------
+  Chats.hasMany(ChatMessages, {
+    foreignKey: "chatId",
+    as: "messages",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  ChatMessages.belongsTo(Chats, {
+    foreignKey: "chatId",
+    as: "chat",
+  });
+
+  // ------------------ Relationship between Bots and ChatMessages ------------
+  Bots.hasMany(ChatMessages, {
+    foreignKey: "botId",
+    as: "allmessages",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  ChatMessages.belongsTo(Bots, {
+    foreignKey: "botId",
+    as: "bot",
+  });
+
+  // ----------------- Relationship between User and ChatMessages --------------
+  User.hasMany(ChatMessages, {
+    foreignKey: "userId",
+    as: "allmessages",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  ChatMessages.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
   });
 
   console.log("Associations set up successfully!");

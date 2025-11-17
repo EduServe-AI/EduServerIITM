@@ -1,14 +1,11 @@
-import {
-  DataTypes,
-  Model,
-  Optional,
-  Association,
-  HasManyGetAssociationsMixin,
-} from "sequelize";
-import { sequelize } from "../config/db.config";
+import { DataTypes, Model, Optional, Association } from "sequelize";
+import sequelize from "../config/db.config";
+
 import { UserAttributes } from "./types";
 import Course from "./course.model";
 import Enrollment from "./enrollment.model";
+import Chats from "./chat.model";
+import ChatMessages from "./chatMessage.model";
 
 // 2. Creation attributes for optional fields
 interface UserCreationAttributes
@@ -35,11 +32,15 @@ class User
   // Assosciation properties
   public courses?: Course[];
   public enrollments?: Enrollment[];
+  public chats?: Chats[];
+  public allMessages?: ChatMessages[];
 
   // Static associations
   public static associations: {
     courses: Association<User, Course>;
     enrollments: Association<User, Enrollment>;
+    chats: Association<User, Chats>;
+    allMessages?: Association<User, ChatMessages>;
   };
 }
 

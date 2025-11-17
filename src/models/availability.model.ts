@@ -1,5 +1,5 @@
 import { Association, DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../config/db.config";
+import sequelize from "../config/db.config";
 
 type DayOfWeek = import("./dayofWeek").default;
 type InstructorProfiles = import("./instructor.model").default;
