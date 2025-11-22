@@ -1,9 +1,12 @@
-import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
 import path from "path";
+import pg from "pg";
 import pgvector from "pgvector/sequelize";
+import { Sequelize } from "sequelize";
 
-dotenv.config({ path: path.resolve(__dirname, "../../.env.local") });
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config({ path: path.resolve(__dirname, "../../.env.local") });
+}
 
 const getSslConfig = () => {
   if (process.env.NODE_ENV === "production") {
@@ -15,8 +18,15 @@ const getSslConfig = () => {
   return false; // Allow disabling for local development
 };
 
-const sequelize = new Sequelize(process.env.DATABASE_URL as string, {
+const connectionString = process.env.DATABASE_URL as string;
+
+if (!connectionString) {
+  throw new Error("Database connection string is missing");
+}
+
+const sequelize = new Sequelize(connectionString, {
   dialect: "postgres",
+  dialectModule: pg,
   logging: false,
   dialectOptions: {
     ssl: getSslConfig(),
