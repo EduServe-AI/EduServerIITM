@@ -23,7 +23,7 @@
     "build:migrate": "npm run migrate && npm run build",
     "start:migrate": "npm run migrate && npm run start",
     
-    "vercel-build" : "node src/scripts/vercel-build.sh"
+    "vercel-build" : "npm run build:migrate"
   },
   "keywords": [],
   "author": "",
