@@ -10,9 +10,20 @@
     "prestart": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint 'src/**/*.ts'",
+
+
     "embed:full": "ts-node src/scripts/populateEmbeddings.ts",
     "embed": "ts-node src/scripts/populateEmbeddingsIncremental.ts",
-    "embed:course": "ts-node src/scripts/populateEmbeddings.ts"
+    "embed:course": "ts-node src/scripts/populateEmbeddings.ts",
+
+    "migrate" : "npx sequelize-cli db:migrate",
+    "migrate:undo": "sequelize-cli db:migrate:undo",
+    "migrate:status": "sequelize-cli db:migrate:status",
+
+    "build:migrate": "npm run migrate && npm run build",
+    "start:migrate": "npm run migrate && npm run start",
+    
+    "vercel-build" : "node src/scripts/vercel-build.sh"
   },
   "keywords": [],
   "author": "",

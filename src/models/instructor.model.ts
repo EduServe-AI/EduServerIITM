@@ -1,12 +1,12 @@
 // models/instructor.model.ts
 
-import { DataTypes, Model, Optional, Association } from "sequelize";
+import { Association, DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db.config";
 
-import type Skill from "./skill.model";
-import type UserLanguage from "./userLanguage.model";
 import { LevelName } from "../types/level";
 import { Price } from "../types/price";
+import type Skill from "./skill.model";
+import type UserLanguage from "./userLanguage.model";
 
 interface InstructorAttributes {
   id: string;
@@ -18,11 +18,12 @@ interface InstructorAttributes {
   githubUrl: string;
   linkedinUrl: string;
   basePrice: Price;
+  isFeatured?: boolean;
 }
 
 type InstructorCreationAttributes = Optional<
   InstructorAttributes,
-  "id" | "githubUrl" | "linkedinUrl"
+  "id" | "githubUrl" | "linkedinUrl" | "isFeatured"
 >;
 
 export default class InstructorProfiles
@@ -38,6 +39,7 @@ export default class InstructorProfiles
   public githubUrl!: string;
   public linkedinUrl!: string;
   public basePrice!: Price;
+  public isFeatured?: boolean;
 
   // Association properties
   public subjects?: Skill[];
@@ -92,6 +94,11 @@ InstructorProfiles.init(
       defaultValue: 100,
       allowNull: false,
     },
+    isFeatured : {
+      type : DataTypes.BOOLEAN,
+      defaultValue : false,
+      allowNull : false
+    }
   },
   {
     sequelize,
