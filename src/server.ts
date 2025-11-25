@@ -31,5 +31,5 @@ import { populateDaysIfEmpty } from "./scripts/populateDays";
 import { populateLanguagesIfEmpty } from "./scripts/populateLanguages";
 // App connection with express
 app.listen(config.port, () => {
-  console.log(`🚀 Server running on the port${config.port}`);
-}); 
+  console.log(`🚀 Server running on port ${config.port}`);
+});
