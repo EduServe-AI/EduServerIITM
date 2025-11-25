@@ -1,10 +1,9 @@
 import config from "./config/constants";
 import sequelize from "./config/db.config";
 
-import { syncModels } from "./models";
+import { setUpAssociations } from "./models/assosciations";
 import { populateCoursesIfEmpty } from "./scripts/populateCourses";
 import { populateLevelsIfEmpty } from "./scripts/populateLevels";
-import { setUpAssociations } from "./models/assosciations";
 
 // Database connection
 sequelize
@@ -14,7 +13,7 @@ sequelize
       "✅ Connection to the database has been established successfully"
     );
     setUpAssociations();
-    await syncModels();
+    // await syncModels(); // Everyone should practice migrations
     await populateLevelsIfEmpty();
     await populateCoursesIfEmpty();
     await populateLanguagesIfEmpty();
@@ -27,11 +26,10 @@ sequelize
   });
 
 import app from "./app";
-import { populateLanguagesIfEmpty } from "./scripts/populateLanguages";
-import { populateDaysIfEmpty } from "./scripts/populateDays";
 import { populateBotsIfEmpty } from "./scripts/populateBots";
-import { populateEmbeddingsIfEmpty } from "./scripts/populateEmbeddings";
+import { populateDaysIfEmpty } from "./scripts/populateDays";
+import { populateLanguagesIfEmpty } from "./scripts/populateLanguages";
 // App connection with express
 app.listen(config.port, () => {
-  console.log(`🚀 Server running on http://localhost:${config.port}`);
+  console.log(`🚀 Server running on port ${config.port}`);
 });

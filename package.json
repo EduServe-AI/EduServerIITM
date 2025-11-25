@@ -12,7 +12,13 @@
     "lint": "eslint 'src/**/*.ts'",
     "embed:full": "ts-node src/scripts/populateEmbeddings.ts",
     "embed": "ts-node src/scripts/populateEmbeddingsIncremental.ts",
-    "embed:course": "ts-node src/scripts/populateEmbeddings.ts"
+    "embed:course": "ts-node src/scripts/populateEmbeddings.ts",
+    "migrate": "sequelize-cli db:migrate",
+    "migrate:undo": "sequelize-cli db:migrate:undo",
+    "migrate:status": "sequelize-cli db:migrate:status",
+    "build:migrate": "npm run migrate && npm run build",
+    "start:migrate": "npm run migrate && npm run start",
+    "vercel-build": "npm run build:migrate"
   },
   "keywords": [],
   "author": "",
