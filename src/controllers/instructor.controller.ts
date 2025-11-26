@@ -1,20 +1,18 @@
 import { Request, Response } from "express";
-import Responder from "../utils/responder";
-import { findUserById } from "../services/user.service";
-import User from "../models/user.model";
 import sequelize from "../config/db.config";
+import User from "../models/user.model";
+import { findUserById } from "../services/user.service";
+import Responder from "../utils/responder";
 
+import Availability from "../models/availability.model";
+import DayOfWeek from "../models/dayofWeek";
 import InstructorProfiles from "../models/instructor.model";
-import { OnboardingSchemaType } from "../utils/validator";
+import Skill from "../models/skill.model";
+import AvailabilityTimeSlot from "../models/timeSlot.model";
+import UserLanguage from "../models/userLanguage.model";
 import { getCourseId } from "../services/course.service";
 import { getLanguageId } from "../services/language.service";
-import Skill from "../models/skill.model";
-import UserLanguage from "../models/userLanguage.model";
-import Availability from "../models/availability.model";
-import { getDayIndex } from "../services/day.service";
-import DayOfWeek from "../models/dayofWeek";
-import AvailabilityTimeSlot from "../models/timeSlot.model";
-import Language from "../models/language.model";
+import { OnboardingSchemaType } from "../utils/validator";
 
 export const instructorOnboardController = async (
   req: Request,

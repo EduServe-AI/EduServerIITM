@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
-import Responder from "../utils/responder";
-import User from "../models/user.model";
 import Course from "../models/course.model";
-import Language from "../models/language.model";
-import Enrollment from "../models/enrollment.model";
+import User from "../models/user.model";
+import Responder from "../utils/responder";
 
 export const getStudentDataController = async (req: Request, res: Response) => {
   try {
