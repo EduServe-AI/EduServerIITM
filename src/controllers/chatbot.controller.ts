@@ -117,7 +117,6 @@ export const makeBotFeaturedController = async (
   try {
     const { botName } = req.body;
 
-    console.log("botname", botName);
     if (!botName) {
       return Responder(res, {
         error: "Bot Name required",
