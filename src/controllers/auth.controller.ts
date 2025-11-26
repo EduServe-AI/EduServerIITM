@@ -1,11 +1,10 @@
 import { Request, Response } from "express";
 import {
-  findStudentByEmail,
-  findInstructorByEmail,
-  createStudent,
-  createInstructor,
   checkPassword,
-  findUserById,
+  createInstructor,
+  createStudent,
+  findInstructorByEmail,
+  findStudentByEmail,
 } from "../services/user.service";
 import { generateToken, verifyToken } from "../utils/jwt";
 import Responder from "../utils/responder";
