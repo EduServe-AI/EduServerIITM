@@ -1,12 +1,12 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Request, Response } from "express";
 import Bots from "../models/bot.model";
 import Chats from "../models/chat.model";
 import ChatMessages from "../models/chatMessage.model";
+import User from "../models/user.model";
+import { prepareLLMChat } from "../services/chat.service";
 import { findUserById } from "../services/user.service";
 import Responder from "../utils/responder";
-import { Request, Response } from "express";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { prepareLLMChat } from "../services/chat.service";
-import User from "../models/user.model";
 
 export const createChatController = async (req: Request, res: Response) => {
   try {
@@ -37,6 +37,9 @@ export const createChatController = async (req: Request, res: Response) => {
         httpCode: 404,
       });
     }
+
+    // This means "A user has started a new interaction session with this bot"
+    await Bots.increment("numInteractions", { where: { id: botId } });
 
     const createdChat = await Chats.create({
       botId: bot.id,
@@ -249,6 +252,16 @@ export const generateResponseController = async (
         username: user.username,
         rating: 0,
       });
+
+      // Need to update the chats last interaction time
+      chat.lastInteractionTime = new Date();
+      await chat.save();
+
+      // Need to activate the chat message if it is first message
+      if (chat.isDeleted) {
+        chat.isDeleted = false;
+        await chat.save();
+      }
     }
   } catch (error) {
     console.error("Error generating message:", error);
@@ -267,7 +280,24 @@ export const generateResponseController = async (
 
 export const getUserChatsController = async (req: Request, res: Response) => {
   // Checking the user
-  const user = await findUserById(req.userId!);
+  const user = await User.findByPk(req.userId, {
+    include: [
+      {
+        model: Chats,
+        as: "chats",
+        attributes: [
+          "id",
+          "botId",
+          "botName",
+          "title",
+          "lastInteractionTime",
+          "createdAt",
+        ],
+        order: [["lastInteractionTime", "DESC"]],
+        limit: 6,
+      },
+    ],
+  });
 
   if (!user || !user.username) {
     return Responder(res, {
@@ -277,7 +307,14 @@ export const getUserChatsController = async (req: Request, res: Response) => {
   }
 
   try {
-    const userChats = await Chats.findAll();
+    const userChats = user.chats?.sort();
+
+    if (!userChats || userChats.length === 0) {
+      return Responder(res, {
+        message: "User has no chats",
+        httpCode: 404,
+      });
+    }
 
     return Responder(res, {
       message: "User Chats Retreived successfully",
