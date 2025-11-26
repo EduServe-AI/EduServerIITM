@@ -294,7 +294,7 @@ export const getUserChatsController = async (req: Request, res: Response) => {
           "createdAt",
         ],
         order: [["lastInteractionTime", "DESC"]],
-        limit: 6,
+        limit: 5,
       },
     ],
   });
