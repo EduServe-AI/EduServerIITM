@@ -18,12 +18,12 @@ interface InstructorAttributes {
   githubUrl: string;
   linkedinUrl: string;
   basePrice: Price;
-  isFeatured?: boolean;
+  // isFeatured?: boolean;
 }
 
 type InstructorCreationAttributes = Optional<
   InstructorAttributes,
-  "id" | "githubUrl" | "linkedinUrl" | "isFeatured"
+  "id" | "githubUrl" | "linkedinUrl"
 >;
 
 export default class InstructorProfiles
@@ -39,7 +39,7 @@ export default class InstructorProfiles
   public githubUrl!: string;
   public linkedinUrl!: string;
   public basePrice!: Price;
-  public isFeatured?: boolean;
+  // public isFeatured?: boolean;
 
   // Association properties
   public subjects?: Skill[];
@@ -94,11 +94,11 @@ InstructorProfiles.init(
       defaultValue: 100,
       allowNull: false,
     },
-    isFeatured : {
-      type : DataTypes.BOOLEAN,
-      defaultValue : false,
-      allowNull : false
-    }
+    // isFeatured: {
+    //   type: DataTypes.BOOLEAN,
+    //   defaultValue: false,
+    //   allowNull: false,
+    // },
   },
   {
     sequelize,
