@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import Responder from "../utils/responder";
 import Bots from "../models/bot.model";
-import Enrollment from "../models/enrollment.model";
 import Course from "../models/course.model";
+import Enrollment from "../models/enrollment.model";
+import Responder from "../utils/responder";
 
 /* ---------------------- FEATURED CHATBOTS ---------------------- */
 
@@ -117,6 +117,7 @@ export const makeBotFeaturedController = async (
   try {
     const { botName } = req.body;
 
+    console.log("botname", botName);
     if (!botName) {
       return Responder(res, {
         error: "Bot Name required",
