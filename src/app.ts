@@ -17,7 +17,23 @@ const app = express();
 // Handling Cors
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://edu-client-iitm.vercel.app"],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, Postman, curl)
+      if (!origin) return callback(null, true);
+      
+      // Allow localhost for development
+      if (origin.startsWith("http://localhost:3000") || origin.startsWith("http://localhost:3001")) {
+        return callback(null, true);
+      }
+      
+      // Allow production and all Vercel preview deployments
+      if (origin.match(/https:\/\/edu-client-iitm.*\.vercel\.app$/)) {
+        return callback(null, true);
+      }
+      
+      // Reject all other origins
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: [
