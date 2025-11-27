@@ -1,23 +1,23 @@
-import express, { Request, Response } from "express";
-import authRoutes from "./routes/auth.routes";
-import userRoutes from "./routes/user.routes";
-import levelRoutes from "./routes/level.routes";
-import instructorRoutes from "./routes/instructor.routes";
-import cors from "cors";
-import morgan from "morgan";
 import cookieParser from "cookie-parser";
-import enrollmentRoutes from "./routes/enrollment.routes";
-import courseRoutes from "./routes/course.routes";
-import chatBotRoutes from "./routes/chatbot.routes";
-import studentRoutes from "./routes/student.routes";
+import cors from "cors";
+import express, { Request, Response } from "express";
+import morgan from "morgan";
+import authRoutes from "./routes/auth.routes";
 import chatRoutes from "./routes/chat.route";
+import chatBotRoutes from "./routes/chatbot.routes";
+import courseRoutes from "./routes/course.routes";
+import enrollmentRoutes from "./routes/enrollment.routes";
+import instructorRoutes from "./routes/instructor.routes";
+import levelRoutes from "./routes/level.routes";
+import studentRoutes from "./routes/student.routes";
+import userRoutes from "./routes/user.routes";
 
 const app = express();
 
 // Handling Cors
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000", "https://edu-client-iitm.vercel.app"],
     credentials: true,
   })
 );
