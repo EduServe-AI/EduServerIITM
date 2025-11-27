@@ -3,14 +3,14 @@
   "trailingSlash": false,
   "builds": [
     {
-      "src": "src/server.ts",
+      "src": "api/index.ts",
       "use": "@vercel/node"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "src/server.ts"
+      "source": "/api/(.*)",
+      "destination": "/api"
     }
   ],
   "buildCommand": "npm run vercel-build",
