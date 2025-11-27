@@ -1,26 +1,57 @@
-import express, { Request, Response } from "express";
-import authRoutes from "./routes/auth.routes";
-import userRoutes from "./routes/user.routes";
-import levelRoutes from "./routes/level.routes";
-import instructorRoutes from "./routes/instructor.routes";
-import cors from "cors";
-import morgan from "morgan";
 import cookieParser from "cookie-parser";
-import enrollmentRoutes from "./routes/enrollment.routes";
-import courseRoutes from "./routes/course.routes";
-import chatBotRoutes from "./routes/chatbot.routes";
-import studentRoutes from "./routes/student.routes";
+import cors from "cors";
+import express, { Request, Response } from "express";
+import morgan from "morgan";
+import authRoutes from "./routes/auth.routes";
 import chatRoutes from "./routes/chat.route";
+import chatBotRoutes from "./routes/chatbot.routes";
+import courseRoutes from "./routes/course.routes";
+import enrollmentRoutes from "./routes/enrollment.routes";
+import instructorRoutes from "./routes/instructor.routes";
+import levelRoutes from "./routes/level.routes";
+import studentRoutes from "./routes/student.routes";
+import userRoutes from "./routes/user.routes";
 
 const app = express();
 
 // Handling Cors
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, Postman, curl)
+      if (!origin) return callback(null, true);
+      
+      // Allow localhost for development
+      if (origin.startsWith("http://localhost:3000") || origin.startsWith("http://localhost:3001")) {
+        return callback(null, true);
+      }
+      
+      // Allow production and all Vercel preview deployments
+      if (origin.match(/https:\/\/edu-client-iitm.*\.vercel\.app$/)) {
+        return callback(null, true);
+      }
+      
+      // Reject all other origins
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+      "Origin",
+      "Cookie",
+      "Set-Cookie",
+    ],
+    exposedHeaders: ["Set-Cookie"],
+    maxAge: 86400, // 24 hours
   })
 );
+
+// Handle preflight requests explicitly
+app.options("*path", cors());
 
 app.use(express.json());
 app.use(cookieParser());
