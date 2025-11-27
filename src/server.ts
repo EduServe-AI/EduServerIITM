@@ -29,7 +29,13 @@ import app from "./app";
 import { populateBotsIfEmpty } from "./scripts/populateBots";
 import { populateDaysIfEmpty } from "./scripts/populateDays";
 import { populateLanguagesIfEmpty } from "./scripts/populateLanguages";
-// App connection with express
-app.listen(config.port, () => {
-  console.log(`🚀 Server running on port ${config.port}`);
-});
+
+// App connection with express (only for local development)
+if (process.env.NODE_ENV !== "production") {
+  app.listen(config.port, () => {
+    console.log(`🚀 Server running on port ${config.port}`);
+  });
+}
+
+// Export for Vercel serverless
+export default app;
