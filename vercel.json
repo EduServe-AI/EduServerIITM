@@ -6,12 +6,12 @@
       "use": "@vercel/node"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "src/server.ts"
+      "source": "/(.*)",
+      "destination": "/src/server.ts"
     }
   ],
   "buildCommand": "npm run vercel-build",
-  "installCommand" : "npm install --legacy-peer-deps"
+  "installCommand": "npm install --legacy-peer-deps"
 }

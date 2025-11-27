@@ -1,14 +1,21 @@
+import app from "./app";
 import config from "./config/constants";
 import sequelize from "./config/db.config";
-
 import { setUpAssociations } from "./models/assosciations";
+import { populateBotsIfEmpty } from "./scripts/populateBots";
 import { populateCoursesIfEmpty } from "./scripts/populateCourses";
+import { populateDaysIfEmpty } from "./scripts/populateDays";
+import { populateLanguagesIfEmpty } from "./scripts/populateLanguages";
 import { populateLevelsIfEmpty } from "./scripts/populateLevels";
 
-// Database connection
-sequelize
-  .authenticate()
-  .then(async () => {
+// Initialize database (non-blocking for serverless)
+let isInitialized = false;
+
+async function initializeDatabase() {
+  if (isInitialized) return;
+  
+  try {
+    await sequelize.authenticate();
     console.log(
       "✅ Connection to the database has been established successfully"
     );
@@ -20,16 +27,24 @@ sequelize
     await populateDaysIfEmpty();
     await populateBotsIfEmpty();
     // await populateEmbeddingsIfEmpty();
-  })
-  .catch((err) => {
+    isInitialized = true;
+  } catch (err) {
     console.error("❌ DB Connection failed:", err);
-  });
+    throw err;
+  }
+}
 
-import app from "./app";
-import { populateBotsIfEmpty } from "./scripts/populateBots";
-import { populateDaysIfEmpty } from "./scripts/populateDays";
-import { populateLanguagesIfEmpty } from "./scripts/populateLanguages";
-// App connection with express
-app.listen(config.port, () => {
-  console.log(`🚀 Server running on port ${config.port}`);
-});
+// For local development
+if (process.env.NODE_ENV !== "production") {
+  initializeDatabase().then(() => {
+    app.listen(config.port, () => {
+      console.log(`🚀 Server running on port ${config.port}`);
+    });
+  });
+} else {
+  // For serverless, initialize on first request (fire and forget)
+  initializeDatabase().catch(console.error);
+}
+
+// Export for Vercel serverless
+export default app;
