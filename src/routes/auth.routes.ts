@@ -35,9 +35,9 @@ router.get(
 
 router.get(
   "/google/student/callback",
-  passport.authenticate("google-student", { 
+  passport.authenticate("google-student", {
     session: false,
-    failureRedirect: `${process.env.FRONTEND_URL}/login?error=authentication_failed`
+    failureRedirect: `${process.env.FRONTEND_URL}/login?error=authentication_failed`,
   }),
   googleCallback
 );
@@ -52,9 +52,9 @@ router.get(
 
 router.get(
   "/google/instructor/callback",
-  passport.authenticate("google-instructor", { 
+  passport.authenticate("google-instructor", {
     session: false,
-    failureRedirect: `${process.env.FRONTEND_URL}/login?error=authentication_failed`
+    failureRedirect: `${process.env.FRONTEND_URL}/login?error=authentication_failed`,
   }),
   googleCallback
 );

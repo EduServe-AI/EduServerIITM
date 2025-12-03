@@ -7,7 +7,15 @@ export const getStudentDataController = async (req: Request, res: Response) => {
   try {
     // Retreiving the user data from the users table
     const student = await User.findByPk(req.userId, {
-      attributes: ["id", "username", "email", "role", "level"],
+      attributes: [
+        "id",
+        "username",
+        "email",
+        "role",
+        "level",
+        "onboarded",
+        "verified",
+      ],
       include: [
         {
           model: Course,
