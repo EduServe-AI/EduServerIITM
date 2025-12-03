@@ -2,6 +2,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Request, Response } from "express";
 import morgan from "morgan";
+import passport from "./config/passport.config";
 import authRoutes from "./routes/auth.routes";
 import chatRoutes from "./routes/chat.route";
 import chatBotRoutes from "./routes/chatbot.routes";
@@ -11,6 +12,7 @@ import instructorRoutes from "./routes/instructor.routes";
 import levelRoutes from "./routes/level.routes";
 import studentRoutes from "./routes/student.routes";
 import userRoutes from "./routes/user.routes";
+
 
 const app = express();
 
@@ -55,7 +57,9 @@ app.options("*path", cors());
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(passport.initialize());
 app.use(morgan("dev"));
+
 
 // Regsitering the routes
 app.use("/api/v1/auth", authRoutes);
