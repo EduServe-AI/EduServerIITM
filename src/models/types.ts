@@ -1,7 +1,6 @@
 import { CourseName } from "../types/course";
+import { CourseStatus, Term } from "../types/enrollment";
 import { LevelName } from "../types/level";
-import { Term, CourseStatus } from "../types/enrollment";
-import { DataTypes } from "sequelize";
 
 export interface UserAttributes {
   id: string;
@@ -15,6 +14,7 @@ export interface UserAttributes {
   updatedAt?: Date;
   verified: boolean;
   profileUrl?: string;
+  googleId?: string;
 }
 
 export interface LevelAttributes {

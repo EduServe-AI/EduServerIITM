@@ -1,11 +1,11 @@
-import { DataTypes, Model, Optional, Association } from "sequelize";
+import { Association, DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db.config";
 
-import { UserAttributes } from "./types";
-import Course from "./course.model";
-import Enrollment from "./enrollment.model";
 import Chats from "./chat.model";
 import ChatMessages from "./chatMessage.model";
+import Course from "./course.model";
+import Enrollment from "./enrollment.model";
+import { UserAttributes } from "./types";
 
 // 2. Creation attributes for optional fields
 interface UserCreationAttributes
@@ -24,6 +24,7 @@ class User
   public level!: "foundation" | "diploma" | "bsc" | "bs";
   public onboarded!: boolean;
   public verified!: boolean;
+  public googleId!: string | undefined;
 
   // Optional: timestamps
   public readonly createdAt!: Date;
@@ -83,6 +84,11 @@ User.init(
     verified: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
+    },
+    googleId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
     },
   },
   {
