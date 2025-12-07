@@ -1,7 +1,6 @@
 import { Router } from "express";
-import authMiddleware from "../middlewares/auth.middleware";
-import { validateData } from "../middlewares/zod.middleware";
 import { getStudentDataController } from "../controllers/student.controller";
+import authMiddleware from "../middlewares/auth.middleware";
 
 const router = Router();
 
