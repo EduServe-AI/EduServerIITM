@@ -2,6 +2,7 @@
 
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db.config";
+import Language from "./language.model";
 
 interface UserLanguageAttributes {
   id: string;
@@ -19,6 +20,9 @@ export default class UserLanguage
   public id!: string;
   public userId!: string;
   public languageId!: string;
+      
+  // Association properties
+  public language?: Language;
 }
 
 UserLanguage.init(

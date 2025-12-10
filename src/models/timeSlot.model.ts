@@ -59,11 +59,19 @@ AvailabilityTimeSlot.init(
       type: DataTypes.TIME,
       allowNull: false,
       field: "start_time",
+      get() {
+        const rawValue = this.getDataValue("startTime");
+        return rawValue ? rawValue.toString().substring(0, 5) : null;
+      },
     },
     endTime: {
       type: DataTypes.TIME,
       allowNull: false,
       field: "end_time",
+      get() {
+        const rawValue = this.getDataValue("endTime");
+        return rawValue ? rawValue.toString().substring(0, 5) : null;
+      },
     },
     timezone: {
       type: DataTypes.STRING(50),

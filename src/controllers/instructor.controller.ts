@@ -7,10 +7,18 @@ import Responder from "../utils/responder";
 import Availability from "../models/availability.model";
 import DayOfWeek from "../models/dayofWeek";
 import InstructorProfiles from "../models/instructor.model";
+import Language from "../models/language.model";
 import Skill from "../models/skill.model";
 import AvailabilityTimeSlot from "../models/timeSlot.model";
 import UserLanguage from "../models/userLanguage.model";
 import { getCourseId } from "../services/course.service";
+import {
+  updateInstructorAvailabilities,
+  updateInstructorProfileFields,
+  updateInstructorSkills,
+  updateUserFields,
+  updateUserLanguages,
+} from "../services/instructor.service";
 import { getLanguageId } from "../services/language.service";
 import { OnboardingSchemaType } from "../utils/validator";
 
@@ -166,6 +174,7 @@ export const instructorOnboardController = async (
 
     // Need to mark the instructor as onboarded
     instructor.onboarded = true;
+    instructor.level = level;
     await instructor.save({ transaction });
 
     await transaction.commit();
@@ -253,8 +262,34 @@ export const getInstructorDataController = async (
               model: Skill,
               as: "skills",
             },
+            {
+              model: Availability,
+              as: "availabilities",
+              include: [
+                {
+                  model: DayOfWeek,
+                  as: "dayOfWeek",
+                  attributes: ["id", "name"],
+                },
+                {
+                  model: AvailabilityTimeSlot,
+                  as: "timeSlots",
+                  attributes: ["id", "startTime", "endTime"],
+                },
+              ],
+            },
           ],
         },
+        {
+          model: UserLanguage,
+          as: "userLanguages",
+          include: [
+            {
+              model: Language,
+              as: "language",
+            }
+          ],
+        }
       ],
     });
 
@@ -274,3 +309,187 @@ export const getInstructorDataController = async (
     });
   }
 };
+
+
+export const updateInstructorDataController = async (
+  req: Request,
+  res: Response
+) => {
+  let transaction;
+
+  try {
+    const instructor = await User.findByPk(req.userId, {
+      include: [
+        {
+          model: InstructorProfiles,
+          as: "instructorProfile",
+        },
+      ],
+    });
+
+    if (!instructor) {
+      return Responder(res, {
+        message: "User not found",
+        httpCode: 404,
+      });
+    }
+
+    if (!instructor.instructorProfile) {
+      return Responder(res, {
+        message: "Instructor profile not found. Please complete onboarding first.",
+        httpCode: 404,
+      });
+    }
+
+    // Extract all possible fields from request body
+    const {
+      username,
+      email,
+      level,
+      bio,
+      basePrice,
+      githubUrl,
+      linkedinUrl,
+      iitmProfileUrl,
+      cgpa,
+      skills,
+      languages,
+      availabilities,
+    } = req.body;
+
+    // Start transaction for atomic updates
+    transaction = await sequelize.transaction();
+
+    // 1. Update User fields if provided
+    if (username !== undefined || email !== undefined || level !== undefined) {
+      const userUpdateResult = await updateUserFields(
+        instructor,
+        { username, email, level },
+        transaction
+      );
+
+      if (!userUpdateResult.success) {
+        await transaction.rollback();
+        return Responder(res, {
+          message: userUpdateResult.error || "Failed to update user fields",
+          httpCode: 400,
+        });
+      }
+    }
+
+    // 2. Update InstructorProfile fields if provided
+    if (
+      bio !== undefined ||
+      basePrice !== undefined ||
+      githubUrl !== undefined ||
+      linkedinUrl !== undefined ||
+      iitmProfileUrl !== undefined ||
+      cgpa !== undefined ||
+      (level !== undefined && instructor.instructorProfile)
+    ) {
+      const profileUpdateResult = await updateInstructorProfileFields(
+        instructor.instructorProfile,
+        { bio, basePrice, githubUrl, linkedinUrl, iitmProfileUrl, cgpa, level },
+        transaction
+      );
+
+      if (!profileUpdateResult.success) {
+        await transaction.rollback();
+        return Responder(res, {
+          message:
+            profileUpdateResult.error || "Failed to update instructor profile",
+          httpCode: 400,
+        });
+      }
+    }
+
+    // 3. Update Skills if provided
+    if (skills !== undefined && Array.isArray(skills)) {
+      await updateInstructorSkills(
+        instructor.instructorProfile.id,
+        req.userId!,
+        skills,
+        transaction
+      );
+    }
+
+    // 4. Update Languages if provided
+    if (languages !== undefined && Array.isArray(languages)) {
+      await updateUserLanguages(instructor.id, languages, transaction);
+    }
+
+    // 5. Update Availabilities if provided
+    if (availabilities !== undefined && Array.isArray(availabilities)) {
+      await updateInstructorAvailabilities(
+        instructor.instructorProfile.id,
+        req.userId!,
+        availabilities,
+        transaction
+      );
+    }
+
+    // Commit transaction
+    await transaction.commit();
+
+    // Fetch updated instructor data with all associations
+    const updatedInstructor = await User.findByPk(req.userId, {
+      include: [
+        {
+          model: InstructorProfiles,
+          as: "instructorProfile",
+          include: [
+            {
+              model: Skill,
+              as: "skills",
+            },
+            {
+              model: Availability,
+              as: "availabilities",
+              include: [
+                {
+                  model: DayOfWeek,
+                  as: "dayOfWeek",
+                  attributes: ["id", "name"],
+                },
+                {
+                  model: AvailabilityTimeSlot,
+                  as: "timeSlots",
+                  attributes: ["id", "startTime", "endTime"],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          model: UserLanguage,
+          as: "userLanguages",
+          include: [
+            {
+              model: Language,
+              as: "language",
+            },
+          ],
+        },
+      ],
+    });
+
+    return Responder(res, {
+      message: "Instructor profile updated successfully",
+      httpCode: 200,
+      data: {
+        instructor: updatedInstructor,
+      },
+    });
+  } catch (error) {
+    // Rollback transaction on error
+    if (transaction) await transaction.rollback();
+
+    console.error("Error updating instructor data:", error);
+    return Responder(res, {
+      error: error,
+      message: "Internal Server Error",
+      httpCode: 500,
+    });
+  }
+};
+
