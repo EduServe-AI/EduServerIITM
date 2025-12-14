@@ -25,8 +25,7 @@ app.use(
       // Allow localhost for development
       if (
         origin.startsWith("http://localhost:3000") ||
-        origin.startsWith("http://localhost:3001") ||
-        origin.startsWith("https://efa623c09c25.ngrok-free.app")
+        origin.startsWith("http://localhost:3001")
       ) {
         return callback(null, true);
       }

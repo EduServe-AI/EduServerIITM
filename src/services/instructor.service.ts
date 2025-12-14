@@ -137,8 +137,8 @@ export const updateInstructorProfileFields = async (
 
   // Process basePrice with validation
   if (updates.basePrice !== undefined && updates.basePrice !== null) {
-    if (updates.basePrice < 0) {
-      return { success: false, error: "Base price cannot be negative" };
+    if (updates.basePrice <= 0) {
+      return { success: false, error: "Base price must be greater than zero" };
     }
     profileUpdates.basePrice = updates.basePrice;
   }
@@ -176,179 +176,329 @@ export const updateInstructorProfileFields = async (
 };
 
 /**
- * Update instructor skills
- * Deletes existing skills and creates new ones with proper course mapping
+ * Update instructor skills with diffing
+ * Performs targeted inserts, updates, and deletes instead of delete-then-create
+ * Preserves data integrity and improves efficiency
  */
 export const updateInstructorSkills = async (
   instructorProfileId: string,
   userId: string,
-  skills: SkillPayload[],
+  newSkills: SkillPayload[],
   transaction: Transaction
 ): Promise<void> => {
-  // Delete existing skills for this instructor
-  await Skill.destroy({
-    where: {
-      instructorProfileId: instructorProfileId,
-    },
-    transaction,
+  // Retrieve existing skills
+  const existingSkills = await Skill.findAll({
+    where: { instructorProfileId },
   });
 
-  // Create new skills if array is not empty
-  if (skills.length > 0) {
-    const courseIdPromises = skills.map((skill) => getCourseId(skill.name));
+  // Create maps for efficient comparison
+  const existingSkillMap = new Map(
+    existingSkills.map((skill) => [skill.name, skill])
+  );
+  const newSkillNames = new Set(newSkills.map((skill) => skill.name));
 
-    const resolvedCourseIds = await Promise.all(courseIdPromises);
-    const skillsToCreate = skills.map((skill, index) => {
-      const courseId = resolvedCourseIds[index];
+  // Determine skills to add, update, and remove
+  const skillsToAdd: SkillPayload[] = [];
+  const skillsToUpdate: Array<{ skill: Skill; payload: SkillPayload }> = [];
+  const skillIdsToRemove: string[] = [];
 
-      if (!courseId) {
-        throw new Error(
-          `Failed to find a corresponding course for subject: ${skill.name}`
+  // Find skills to add and update
+  for (const newSkill of newSkills) {
+    const existingSkill = existingSkillMap.get(newSkill.name);
+
+    if (existingSkill) {
+      // Skill exists, prepare for update if needed
+      skillsToUpdate.push({ skill: existingSkill, payload: newSkill });
+    } else {
+      // New skill to add
+      skillsToAdd.push(newSkill);
+    }
+  }
+
+  // Find skills to remove
+  for (const existingSkill of existingSkills) {
+    if (!newSkillNames.has(existingSkill.name)) {
+      skillIdsToRemove.push(existingSkill.id);
+    }
+  }
+
+  // Perform targeted database operations
+  try {
+    // Remove skills that are no longer needed
+    if (skillIdsToRemove.length > 0) {
+      await Skill.destroy({
+        where: { id: skillIdsToRemove },
+        transaction,
+      });
+    }
+
+    // Add new skills with course mapping
+    if (skillsToAdd.length > 0) {
+      const courseIdPromises = skillsToAdd.map((skill) =>
+        getCourseId(skill.name)
+      );
+
+      const resolvedCourseIds = await Promise.all(courseIdPromises);
+      const skillsToCreatePayload = skillsToAdd.map((skill, index) => {
+        const courseId = resolvedCourseIds[index];
+
+        if (!courseId) {
+          throw new Error(
+            `Failed to find a corresponding course for subject: ${skill.name}`
+          );
+        }
+
+        return {
+          name: skill.name,
+          instructorProfileId: instructorProfileId,
+          courseId: courseId,
+          userId: userId,
+        };
+      });
+
+      await Skill.bulkCreate(skillsToCreatePayload, { transaction });
+    }
+
+    // Update existing skills if needed (e.g., if course mapping changed)
+    for (const { skill, payload } of skillsToUpdate) {
+      const courseId = await getCourseId(payload.name);
+
+      if (courseId && skill.courseId !== courseId) {
+        await skill.update(
+          {
+            courseId: courseId,
+            name: payload.name,
+          },
+          { transaction }
         );
       }
-
-      return {
-        name: skill.name,
-        instructorProfileId: instructorProfileId,
-        courseId: courseId,
-        userId: userId,
-      };
-    });
-
-    await Skill.bulkCreate(skillsToCreate, { transaction });
+    }
+  } catch (error) {
+    throw new Error(
+      `Failed to update instructor skills: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 };
 
 /**
- * Update user languages
- * Deletes existing languages and creates new ones with proper language mapping
+ * Update user languages with diffing
+ * Performs targeted inserts and deletes instead of delete-then-create
  */
 export const updateUserLanguages = async (
   userId: string,
-  languages: LanguagePayload[],
+  newLanguages: LanguagePayload[],
   transaction: Transaction
 ): Promise<void> => {
-  // Delete existing languages for this user
-  await UserLanguage.destroy({
-    where: {
-      userId: userId,
-    },
-    transaction,
+  // Retrieve existing languages
+  const existingLanguages = await UserLanguage.findAll({
+    where: { userId },
+    include: [
+      {
+        association: "language",
+        attributes: ["id", "name"],
+      },
+    ],
   });
 
-  // Create new languages if array is not empty
-  if (languages.length > 0) {
-    const languageIdPromises = languages.map((language) =>
-      getLanguageId(language.language.name)
+  // Create maps for efficient comparison
+  const existingLanguageMap = new Map(
+    existingLanguages.map((ul) => [ul.language?.name || ul.languageId, ul.id])
+  );
+  const newLanguageNames = new Set(newLanguages.map((l) => l.language.name));
+
+  // Determine languages to add and remove
+  const languagesToAdd: LanguagePayload[] = [];
+  const languageIdsToRemove: string[] = [];
+
+  // Find languages to add
+  for (const newLanguage of newLanguages) {
+    if (!existingLanguageMap.has(newLanguage.language.name)) {
+      languagesToAdd.push(newLanguage);
+    }
+  }
+
+  // Find languages to remove
+  for (const existingLanguage of existingLanguages) {
+    const languageName = existingLanguage.language?.name;
+    if (languageName && !newLanguageNames.has(languageName)) {
+      languageIdsToRemove.push(existingLanguage.id);
+    }
+  }
+
+  // Perform targeted database operations
+  try {
+    // Remove languages that are no longer needed
+    if (languageIdsToRemove.length > 0) {
+      await UserLanguage.destroy({
+        where: { id: languageIdsToRemove },
+        transaction,
+      });
+    }
+
+    // Add new languages with language mapping
+    if (languagesToAdd.length > 0) {
+      const languageIdPromises = languagesToAdd.map((language) =>
+        getLanguageId(language.language.name)
+      );
+
+      const resolvedLanguageIds = await Promise.all(languageIdPromises);
+      const languagesToCreatePayload = languagesToAdd.map((language, index) => {
+        const languageId = resolvedLanguageIds[index];
+
+        if (!languageId) {
+          throw new Error(
+            `Failed to find a corresponding language: ${language.language.name}`
+          );
+        }
+
+        return {
+          userId: userId,
+          languageId: languageId,
+        };
+      });
+
+      await UserLanguage.bulkCreate(languagesToCreatePayload, { transaction });
+    }
+  } catch (error) {
+    throw new Error(
+      `Failed to update user languages: ${error instanceof Error ? error.message : String(error)}`
     );
-
-    const resolvedLanguageIds = await Promise.all(languageIdPromises);
-    const languagesToCreate = languages.map((language, index) => {
-      const languageId = resolvedLanguageIds[index];
-
-      if (!languageId) {
-        throw new Error(
-          `Failed to find a corresponding language for language: ${language.language.name}`
-        );
-      }
-
-      return {
-        userId: userId,
-        languageId: languageId,
-      };
-    });
-
-    await UserLanguage.bulkCreate(languagesToCreate, { transaction });
   }
 };
 
 /**
- * Update instructor availabilities with nested time slots
- * Deletes existing availabilities and time slots, then creates new ones
+ * Update instructor availabilities with diffing
+ * Performs targeted inserts, updates, and deletes for availabilities and time slots
  */
 export const updateInstructorAvailabilities = async (
   instructorProfileId: string,
   userId: string,
-  availabilities: AvailabilityPayload[],
+  newAvailabilities: AvailabilityPayload[],
   transaction: Transaction
 ): Promise<void> => {
-  // Delete existing availabilities and their time slots for this instructor
+  // Retrieve existing availabilities with their time slots
   const existingAvailabilities = await Availability.findAll({
-    where: {
-      instructorProfileId: instructorProfileId,
-    },
-    attributes: ["id"],
+    where: { instructorProfileId },
+    include: [{ model: AvailabilityTimeSlot, as: "timeSlots" }],
   });
 
-  const availabilityIds = existingAvailabilities.map((av) => av.id);
+  // Fetch all days of the week
+  const daysOfWeek = await DayOfWeek.findAll();
+  const dayIdMap: { [key: string]: number } = {};
+  daysOfWeek.forEach((day) => {
+    dayIdMap[day.name] = day.id;
+  });
 
-  if (availabilityIds.length > 0) {
-    // Delete time slots first (child records)
-    await AvailabilityTimeSlot.destroy({
-      where: {
-        availabilityId: availabilityIds,
-      },
-      transaction,
-    });
+  // Create map for existing availabilities by day
+  const existingAvailabilityMap = new Map(
+    existingAvailabilities.map((av) => [av.dayOfWeekId, av])
+  );
+  const newDayIds = new Set<number>();
 
-    // Then delete availabilities (parent records)
-    await Availability.destroy({
-      where: {
-        instructorProfileId: instructorProfileId,
-      },
-      transaction,
-    });
-  }
-
-  // Create new availabilities if array is not empty
-  if (availabilities.length > 0) {
-    // Fetch all days of the week to create a map
-    const daysOfWeek = await DayOfWeek.findAll();
-    const dayIdMap: { [key: string]: number } = {};
-    daysOfWeek.forEach((day) => {
-      dayIdMap[day.name] = day.id;
-    });
-
-    // Process each availability
-    for (const availability of availabilities) {
+  try {
+    // Process each new availability
+    for (const availability of newAvailabilities) {
       const dayOfWeekId =
-        availability.dayOfWeek?.id || 
-        (availability.dayOfWeek?.name ? dayIdMap[availability.dayOfWeek.name] : undefined);
+        availability.dayOfWeek?.id ||
+        (availability.dayOfWeek?.name
+          ? dayIdMap[availability.dayOfWeek.name]
+          : undefined);
 
       if (!dayOfWeekId) {
         console.warn(
           `Could not find a day of the week for: ${availability.dayOfWeek?.name}`
         );
-        continue; // Skip invalid days
+        throw new Error(
+          `Invalid day of the week: ${availability.dayOfWeek?.name}`
+        );
       }
 
-      // Create the availability record
-      const availabilityRecord = await Availability.create(
-        {
-          instructorProfileId: instructorProfileId,
-          dayOfWeekId: dayOfWeekId,
-          isAvailable: availability.isAvailable,
-          userId: userId,
-        },
-        { transaction }
-      );
+      newDayIds.add(dayOfWeekId);
+      const existingAvailability = existingAvailabilityMap.get(dayOfWeekId);
 
-      // If available and has time slots, create them
-      if (
-        availability.isAvailable &&
-        availability.timeSlots &&
-        availability.timeSlots.length > 0
-      ) {
-        const timeSlotsToCreate = availability.timeSlots.map((slot) => ({
-          availabilityId: availabilityRecord.id,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-        }));
+      if (existingAvailability) {
+        // Update existing availability
+        await existingAvailability.update(
+          {
+            isAvailable: availability.isAvailable,
+          },
+          { transaction }
+        );
 
-        await AvailabilityTimeSlot.bulkCreate(timeSlotsToCreate, {
-          transaction,
-        });
+        // Handle time slots update
+        if (availability.isAvailable && availability.timeSlots) {
+          // Delete old time slots for this availability
+          await AvailabilityTimeSlot.destroy({
+            where: { availabilityId: existingAvailability.id },
+            transaction,
+          });
+
+          // Create new time slots
+          if (availability.timeSlots.length > 0) {
+            const timeSlotsToCreate = availability.timeSlots.map((slot) => ({
+              availabilityId: existingAvailability.id,
+              startTime: slot.startTime,
+              endTime: slot.endTime,
+            }));
+
+            await AvailabilityTimeSlot.bulkCreate(timeSlotsToCreate, {
+              transaction,
+            });
+          }
+        } else if (!availability.isAvailable) {
+          // Remove time slots if no longer available
+          await AvailabilityTimeSlot.destroy({
+            where: { availabilityId: existingAvailability.id },
+            transaction,
+          });
+        }
+      } else {
+        // Create new availability
+        const availabilityRecord = await Availability.create(
+          {
+            instructorProfileId: instructorProfileId,
+            dayOfWeekId: dayOfWeekId,
+            isAvailable: availability.isAvailable,
+            userId: userId,
+          },
+          { transaction }
+        );
+
+        // Create time slots if available
+        if (
+          availability.isAvailable &&
+          availability.timeSlots &&
+          availability.timeSlots.length > 0
+        ) {
+          const timeSlotsToCreate = availability.timeSlots.map((slot) => ({
+            availabilityId: availabilityRecord.id,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+          }));
+
+          await AvailabilityTimeSlot.bulkCreate(timeSlotsToCreate, {
+            transaction,
+          });
+        }
       }
     }
+
+    // Remove availabilities for days not in new list
+    for (const existingAvailability of existingAvailabilities) {
+      if (!newDayIds.has(existingAvailability.dayOfWeekId)) {
+        // Delete time slots first
+        await AvailabilityTimeSlot.destroy({
+          where: { availabilityId: existingAvailability.id },
+          transaction,
+        });
+
+        // Then delete availability
+        await existingAvailability.destroy({ transaction });
+      }
+    }
+  } catch (error) {
+    throw new Error(
+      `Failed to update instructor availabilities: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 };
