@@ -5,7 +5,9 @@ import Chats from "./chat.model";
 import ChatMessages from "./chatMessage.model";
 import Course from "./course.model";
 import Enrollment from "./enrollment.model";
+import type InstructorProfiles from "./instructor.model";
 import { UserAttributes } from "./types";
+import type UserLanguage from "./userLanguage.model";
 
 // 2. Creation attributes for optional fields
 interface UserCreationAttributes
@@ -35,6 +37,8 @@ class User
   public enrollments?: Enrollment[];
   public chats?: Chats[];
   public allMessages?: ChatMessages[];
+  public instructorProfile?: InstructorProfiles;
+  public userLanguages?: UserLanguage[];
 
   // Static associations
   public static associations: {
@@ -42,6 +46,8 @@ class User
     enrollments: Association<User, Enrollment>;
     chats: Association<User, Chats>;
     allMessages?: Association<User, ChatMessages>;
+    instructorProfile?: Association<User, InstructorProfiles>;
+    userLanguages?: Association<User, UserLanguage>;
   };
 }
 

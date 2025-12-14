@@ -81,10 +81,14 @@ export const registerInstructor = async (req: Request, res: Response) => {
       path: "/",
     });
 
+    // Remove password before sending response
+    const instructorData = newInstructor.toJSON();
+    const { password: _, ...instructorWithoutPassword } = instructorData;
+
     return Responder(res, {
       message: "Instructor registered successfully",
       data: {
-        instructor: newInstructor,
+        instructor: instructorWithoutPassword,
         accessToken,
       },
       httpCode: 200,
@@ -154,21 +158,17 @@ export const loginStudent = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    // checking for student existence
     const student = await findStudentByEmail(email);
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    // checking for password hash
     const isMatch = await checkPassword(password, student.password!);
 
-    // validating
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Generating tokens
     const { accessToken, refreshToken } = generateToken(
       student.id,
       student.role
@@ -182,10 +182,14 @@ export const loginStudent = async (req: Request, res: Response) => {
       path: "/",
     });
 
+    // Remove password before sending response
+    const studentData = student.toJSON();
+    const { password: _, ...studentWithoutPassword } = studentData;
+
     return Responder(res, {
       message: "Student logged-in successfully",
       data: {
-        student: student,
+        student: studentWithoutPassword,
         accessToken,
       },
       httpCode: 200,
@@ -204,16 +208,13 @@ export const loginInstructor = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    // checking for instructor existence
     const instructor = await findInstructorByEmail(email);
     if (!instructor) {
       return res.status(404).json({ message: "Instructor not found" });
     }
 
-    // checking for password hash
     const isMatch = await checkPassword(password, instructor.password!);
 
-    // validating
     if (!isMatch) {
       return Responder(res, {
         error: "Invalid credentials",
@@ -221,7 +222,6 @@ export const loginInstructor = async (req: Request, res: Response) => {
       });
     }
 
-    // Generating tokens
     const { accessToken, refreshToken } = generateToken(
       instructor.id,
       instructor.role
@@ -235,10 +235,14 @@ export const loginInstructor = async (req: Request, res: Response) => {
       path: "/",
     });
 
+    // Remove password before sending response
+    const instructorData = instructor.toJSON();
+    const { password: _, ...instructorWithoutPassword } = instructorData;
+
     return Responder(res, {
       message: "Instructor logged-in successfully",
       data: {
-        instructor: instructor,
+        instructor: instructorWithoutPassword,
         accessToken,
       },
       httpCode: 200,
