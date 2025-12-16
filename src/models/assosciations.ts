@@ -1,17 +1,18 @@
-import User from "./user.model";
-import Level from "./level.model";
-import Course from "./course.model";
-import Enrollment from "./enrollment.model";
-import InstructorProfiles from "./instructor.model";
-import Skill from "./skill.model";
-import Language from "./language.model";
 import Availability from "./availability.model";
-import UserLanguage from "./userLanguage.model";
-import DayOfWeek from "./dayofWeek";
-import AvailabilityTimeSlot from "./timeSlot.model";
 import Bots from "./bot.model";
 import Chats from "./chat.model";
 import ChatMessages from "./chatMessage.model";
+import Course from "./course.model";
+import DayOfWeek from "./dayofWeek";
+import Enrollment from "./enrollment.model";
+import InstructorProfiles from "./instructor.model";
+import Language from "./language.model";
+import Level from "./level.model";
+import Session from "./session.model";
+import Skill from "./skill.model";
+import AvailabilityTimeSlot from "./timeSlot.model";
+import User from "./user.model";
+import UserLanguage from "./userLanguage.model";
 
 // setup associations
 export const setUpAssociations = () => {
@@ -309,7 +310,24 @@ export const setUpAssociations = () => {
     as: "user",
   });
 
+  User.hasMany(Session, {
+    foreignKey: "host_id",
+    as: "hostedSessions",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  User.hasMany(Session, {
+    foreignKey: "guest_id",
+    as: "guestSessions",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  Session.belongsTo(User, { foreignKey: "host_id", as: "host" });
+  Session.belongsTo(User, { foreignKey: "guest_id", as: "guest" });
+
   console.log("Associations set up successfully!");
 };
 
-export { User, Level, Course, Enrollment };
+export { Course, Enrollment, Level, User };

@@ -14,6 +14,8 @@ interface Config {
   DOCKER_UNSTRUCTURED_URL: string;
   PROD_UNSTRUCTURED_URL: string;
   PROD_UNSTRUCTURED_KEY: string;
+  STREAM_API_KEY: string;
+  STREAM_API_SECRET: string;
 }
 
 const config: Config = {
@@ -25,6 +27,8 @@ const config: Config = {
   DOCKER_UNSTRUCTURED_URL: process.env.DOCKER_UNSTUCTURED_URL!,
   PROD_UNSTRUCTURED_URL: process.env.UNSTRUCTURED_URL!,
   PROD_UNSTRUCTURED_KEY: process.env.UNSTRUCTURED_KEY!,
+  STREAM_API_KEY: process.env.STREAM_API_KEY!,
+  STREAM_API_SECRET: process.env.STREAM_API_SECRET!,
 };
 
 export default config;

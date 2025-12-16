@@ -10,9 +10,9 @@ import courseRoutes from "./routes/course.routes";
 import enrollmentRoutes from "./routes/enrollment.routes";
 import instructorRoutes from "./routes/instructor.routes";
 import levelRoutes from "./routes/level.routes";
+import sessionRoutes from "./routes/session.routes";
 import studentRoutes from "./routes/student.routes";
 import userRoutes from "./routes/user.routes";
-
 
 const app = express();
 
@@ -22,17 +22,20 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps, Postman, curl)
       if (!origin) return callback(null, true);
-      
+
       // Allow localhost for development
-      if (origin.startsWith("http://localhost:3000") || origin.startsWith("http://localhost:3001")) {
+      if (
+        origin.startsWith("http://localhost:3000") ||
+        origin.startsWith("http://localhost:3001")
+      ) {
         return callback(null, true);
       }
-      
+
       // Allow production and all Vercel preview deployments
       if (origin.match(/https:\/\/edu-client-iitm.*\.vercel\.app$/)) {
         return callback(null, true);
       }
-      
+
       // Reject all other origins
       callback(new Error("Not allowed by CORS"));
     },
@@ -60,7 +63,6 @@ app.use(cookieParser());
 app.use(passport.initialize());
 app.use(morgan("dev"));
 
-
 // Regsitering the routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
@@ -71,6 +73,7 @@ app.use("/api/v1/instructor", instructorRoutes);
 app.use("/api/v1/bot", chatBotRoutes);
 app.use("/api/v1/student", studentRoutes);
 app.use("/api/v1/chat", chatRoutes);
+app.use("/api/v1/session", sessionRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("<h1>Eduserve Backend </h1>");

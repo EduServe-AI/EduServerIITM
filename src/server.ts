@@ -1,6 +1,7 @@
 import app from "./app";
 import config from "./config/constants";
 import sequelize from "./config/db.config";
+import { syncModels } from "./models";
 import { setUpAssociations } from "./models/assosciations";
 import { populateBotsIfEmpty } from "./scripts/populateBots";
 import { populateCoursesIfEmpty } from "./scripts/populateCourses";
@@ -13,14 +14,14 @@ let isInitialized = false;
 
 async function initializeDatabase() {
   if (isInitialized) return;
-  
+
   try {
     await sequelize.authenticate();
     console.log(
       "✅ Connection to the database has been established successfully"
     );
     setUpAssociations();
-    // await syncModels(); // Everyone should practice migrations
+    await syncModels(); // Everyone should practice migrations
     await populateLevelsIfEmpty();
     await populateCoursesIfEmpty();
     await populateLanguagesIfEmpty();
