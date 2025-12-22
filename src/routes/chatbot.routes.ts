@@ -1,10 +1,11 @@
 import { Router } from "express";
-import authMiddleware from "../middlewares/auth.middleware";
 import {
   featuredChatBotController,
-  recommendedChatBotController,
+  getBotsController,
   makeBotFeaturedController,
+  recommendedChatBotController,
 } from "../controllers/chatbot.controller";
+import authMiddleware from "../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -16,5 +17,8 @@ router.get("/recommended", authMiddleware, recommendedChatBotController);
 
 // For making a chatbot feature
 router.post("/feature", authMiddleware, makeBotFeaturedController);
+
+// For searching chatbots
+router.get("/", authMiddleware, getBotsController);
 
 export default router;
