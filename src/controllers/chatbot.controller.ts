@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Op, WhereOptions } from "sequelize";
 import Bots from "../models/bot.model";
 import Course from "../models/course.model";
 import Enrollment from "../models/enrollment.model";
@@ -143,6 +144,47 @@ export const makeBotFeaturedController = async (
     });
   } catch (error) {
     console.error("Error making chatbot featured ", error);
+    return Responder(res, {
+      error: "INTERNAL_SERVER_ERROR",
+      message: "An unexpected error occurred on the server.",
+      httpCode: 500,
+    });
+  }
+};
+
+// ------------------------Searching and Filtering
+
+export const getBotsController = async (req: Request, res: Response) => {
+  try {
+    // Extracting query params
+    const search = (req.query.search as string) || "";
+    const level = (req.query.level as string) || "all";
+
+    const whereCondition: WhereOptions = {};
+
+    if (search) {
+      whereCondition.name = {
+        [Op.iLike]: `%${search}%`,
+      };
+    }
+
+    if (level && level.toLowerCase() !== "all") {
+      whereCondition.level = level;
+    }
+
+    // Executing the query
+    const bots = await Bots.findAll({
+      where: whereCondition,
+      order: [["createdAt", "DESC"]],
+    });
+
+    return Responder(res, {
+      message: "Retreived bots successfully",
+      httpCode: 200,
+      data: { bots },
+    });
+  } catch (error) {
+    console.error("Error retreiving chatbots", error);
     return Responder(res, {
       error: "INTERNAL_SERVER_ERROR",
       message: "An unexpected error occurred on the server.",
