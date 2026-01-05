@@ -36,6 +36,11 @@ app.use(
         return callback(null, true);
       }
 
+      // Allow ngrok URLs for testing
+      if (origin.match(/https:\/\/.*\.ngrok-free\.app$/)) {
+        return callback(null, true);
+      }
+
       // Reject all other origins
       callback(new Error("Not allowed by CORS"));
     },
