@@ -35,18 +35,22 @@ export const createSessionController = async (req: Request, res: Response) => {
       });
     }
 
-    await streamClient.upsertUsers([
-      {
-        id: req.userId,
-        name: user.username || user.email,
-        role: user.role || undefined,
-      },
-      {
-        id: guestId,
-        name: guest.username || guest.email,
-        role: guest.role || undefined,
-      },
-    ]);
+    console.log("before user upstream");
+
+    // await streamClient.upsertUsers([
+    //   {
+    //     id: req.userId,
+    //     name: user.username || user.email,
+    //     role: user.role || undefined,
+    //   },
+    //   {
+    //     id: guestId,
+    //     name: guest.username || guest.email,
+    //     role: guest.role || undefined,
+    //   },
+    // ]);
+
+    console.log("test user");
 
     // 2. Create call
     const streamData = await streamClient.video
@@ -58,6 +62,9 @@ export const createSessionController = async (req: Request, res: Response) => {
           members: [{ user_id: req.userId }, { user_id: guestId }],
         },
       });
+
+    
+    console.log("test stream data", streamData);
 
     const savedSession = await Session.create({
       title: title,
@@ -96,9 +103,9 @@ export const getSessionController = async (req: Request, res: Response) => {
     let whereClause = {};
 
     if (user.role === "student") {
-      whereClause = { guest_id: req.userId };
-    } else if (user.role === "instructor") {
       whereClause = { host_id: req.userId };
+    } else if (user.role === "instructor") {
+      whereClause = { guest_id: req.userId };
     } else {
       return res.status(400).json({ message: "Invalid role" });
     }
