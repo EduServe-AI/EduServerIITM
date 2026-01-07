@@ -29,6 +29,7 @@ export interface LevelAttributes {
 export interface CourseAttributes {
   id: string;
   name: CourseName;
+  title: string;
   description: string;
   credits: number;
   level: LevelName;

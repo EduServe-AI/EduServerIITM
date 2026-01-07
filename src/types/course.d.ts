@@ -7,7 +7,7 @@ export type foundationSubjects =
   | "Stats-II"
   | "English-I"
   | "English-II"
-  | "Computational Thinking"
+  | "CT"
   | "Python";
 
 export type diplomadsSubjects =
@@ -34,7 +34,42 @@ export type diplomaProjects =
   | "MAD-II Project"
   | "DL & GENAI Project";
 
-export type bscSubjects = "AI" | "DL" | "SE" | "ST" | "SFPG" | "MR" | "LLM";
+export type bscSubjects =
+  | "AI"
+  | "DL"
+  | "SE"
+  | "ST"
+  | "SFPG"
+  | "MR"
+  | "LLM"
+  | "FF"
+  | "LSM"
+  | "AA"
+  | "SC"
+  | "CSD"
+  | "PC"
+  | "MT"
+  | "NLP"
+  | "DLCV"
+  | "ME"
+  | "CF"
+  | "DLP"
+  | "OS"
+  | "ADS"
+  | "MLOPS"
+  | "CN"
+  | "TC"
+  | "ADL"
+  | "DS & AI Lab"
+  | "MFGENAI"
+  | "GT"
+  | "PSOSM"
+  | "SDM"
+  | "I4.0"
+  | "BD"
+  | "RL"
+  | "ATBI"
+  | "BDBN";
 
 export type CourseName =
   | foundationSubjects
@@ -45,6 +80,7 @@ export type CourseName =
 
 export type Course = {
   name: CourseName;
+  title: string;
   description: string;
   credits: number;
   level: LevelName;
@@ -53,6 +89,7 @@ export type Course = {
 
 export type FoundationSubjects = {
   name: foundationSubjects;
+  title: string;
   description: string;
   credits: number;
   level: LevelName;
@@ -61,6 +98,7 @@ export type FoundationSubjects = {
 
 export type DiplomaDsSubjects = {
   name: diplomadsSubjects;
+  title: string;
   description: string;
   credits: number;
   level: LevelName;
@@ -69,6 +107,7 @@ export type DiplomaDsSubjects = {
 
 export type DiplomaPrSubjects = {
   name: diplomaprSubjects;
+  title: string;
   description: string;
   credits: number;
   level: LevelName;
@@ -77,6 +116,7 @@ export type DiplomaPrSubjects = {
 
 export type DiplomaProjects = {
   name: diplomaProjects;
+  title: string;
   description: string;
   credits: number;
   level: LevelName;
@@ -85,6 +125,7 @@ export type DiplomaProjects = {
 
 export type BscSubjects = {
   name: bscSubjects;
+  title: string;
   description: string;
   credits: number;
   level: LevelName;

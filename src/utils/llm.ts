@@ -1,11 +1,12 @@
 import { TaskType } from "@google/generative-ai";
-import Bots from "../models/bot.model";
+import { AzureBlobStorageFileLoader } from "@langchain/community/document_loaders/web/azure_blob_storage_file";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import config from "../config/constants";
-import { AzureBlobStorageFileLoader } from "@langchain/community/document_loaders/web/azure_blob_storage_file";
+import Bots from "../models/bot.model";
 
 export const createSystemPrompt = async (
   botId: string,
+  courseTitle : string,
   username: string,
   contextText: string,
   sourcesString: string
@@ -14,7 +15,7 @@ export const createSystemPrompt = async (
 
   if (!bot) throw new Error("Bot Not Found brother");
 
-  let prompt = ` You are "${bot.name} bot " , an expert AI Tutor at the subject ${bot.name} for the  BS Degree in Data Science and Applications Programme by IIT Madras . 
+  let prompt = ` You are "${bot.name} bot " , an expert AI Tutor at the subject ${courseTitle} for the  BS Degree in Data Science and Applications Programme by IIT Madras . 
 
   Your Personality and Description :
 

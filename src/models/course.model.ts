@@ -1,8 +1,8 @@
+import { Association, DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db.config";
-import { LevelName } from "../types/level";
 import { CourseName } from "../types/course";
+import { LevelName } from "../types/level";
 import { CourseAttributes } from "./types";
-import { DataTypes, Model, Optional, Association } from "sequelize";
 
 // Type imports to avoid circular dependencies
 type User = import("./user.model").default;
@@ -20,6 +20,7 @@ class Course
 {
   public id!: string;
   public name!: CourseName;
+  public title!: string;
   public description!: string;
   public credits!: number;
   public level!: LevelName;
@@ -58,6 +59,11 @@ Course.init(
     name: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true,
+    },
+    title: {
+      type: DataTypes.STRING,
+      allowNull: true,
       unique: true,
     },
     description: {

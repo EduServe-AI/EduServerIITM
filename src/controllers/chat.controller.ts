@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import Bots from "../models/bot.model";
 import Chats from "../models/chat.model";
 import ChatMessages from "../models/chatMessage.model";
+import Courses from "../models/course.model";
 import User from "../models/user.model";
 import { prepareLLMChat } from "../services/chat.service";
 import { findUserById } from "../services/user.service";
@@ -199,6 +200,15 @@ export const generateResponseController = async (
     });
   }
 
+  const course = await Courses.findByPk(bot.courseId);
+  if (!course) {
+    return Responder(res, {
+      error: "Associated course not found",
+      httpCode: 404,
+    });
+  }
+
+
   const { userMessage, botMessage } = req.body;
 
   if (!userMessage || !botMessage) {
@@ -223,7 +233,7 @@ export const generateResponseController = async (
     });
 
     // Helper function we pass chatId , and well get an LLM Object loaded with full context
-    const stream = await prepareLLMChat(chat, userMessage.content);
+    const stream = await prepareLLMChat(chat, userMessage.content , course.title);
 
     // Set headers for streaming
     res.setHeader("Content-Type", "text/plain");
