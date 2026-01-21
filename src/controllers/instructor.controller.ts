@@ -4,7 +4,9 @@ import User from "../models/user.model";
 import { findUserById } from "../services/user.service";
 import Responder from "../utils/responder";
 
+import { Op, WhereOptions } from "sequelize";
 import Availability from "../models/availability.model";
+import Course from "../models/course.model";
 import DayOfWeek from "../models/dayofWeek";
 import InstructorProfiles from "../models/instructor.model";
 import Language from "../models/language.model";
@@ -13,6 +15,9 @@ import AvailabilityTimeSlot from "../models/timeSlot.model";
 import UserLanguage from "../models/userLanguage.model";
 import { getCourseId } from "../services/course.service";
 import {
+  getInstructorAvailabilites,
+  getInstructorLanguages,
+  getInstructorSkills,
   updateInstructorAvailabilities,
   updateInstructorProfileFields,
   updateInstructorSkills,
@@ -24,7 +29,7 @@ import { OnboardingSchemaType } from "../utils/validator";
 
 export const instructorOnboardController = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   let transaction;
 
@@ -70,7 +75,7 @@ export const instructorOnboardController = async (
         linkedinUrl,
         basePrice: 100,
       },
-      { transaction }
+      { transaction },
     );
 
     // creating records in skills table  - instructor subject expertises
@@ -84,7 +89,7 @@ export const instructorOnboardController = async (
       if (!courseId) {
         // You can choose to either throw an error or simply skip this skill
         throw new Error(
-          `Failed to find a corresponding course for subject: ${subject}`
+          `Failed to find a corresponding course for subject: ${subject}`,
         );
       }
 
@@ -102,7 +107,7 @@ export const instructorOnboardController = async (
 
     // creating records in languages table - user languages
     const languageIdPromises = languages.map((language) =>
-      getLanguageId(language)
+      getLanguageId(language),
     );
 
     const resolvedLanguageIds = await Promise.all(languageIdPromises);
@@ -113,7 +118,7 @@ export const instructorOnboardController = async (
       if (!languageId) {
         // You can choose to either throw an error or simply skip this skill
         throw new Error(
-          `Failed to find a corresponding language for language: ${language}`
+          `Failed to find a corresponding language for language: ${language}`,
         );
       }
 
@@ -154,7 +159,7 @@ export const instructorOnboardController = async (
           isAvailable: dayData.isEnabled,
           userId: req.userId!,
         },
-        { transaction }
+        { transaction },
       );
 
       //4. If the day is enabled and has timeslots , we create child records in the timeslots table.
@@ -202,7 +207,7 @@ export const instructorOnboardController = async (
 
 export const featuredInstructorController = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     const featuredInstructors = await InstructorProfiles.findAll({
@@ -240,7 +245,7 @@ export const featuredInstructorController = async (
 
 export const getInstructorDataController = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     const instructor = await User.findByPk(req.userId, {
@@ -287,9 +292,9 @@ export const getInstructorDataController = async (
             {
               model: Language,
               as: "language",
-            }
+            },
           ],
-        }
+        },
       ],
     });
 
@@ -310,10 +315,9 @@ export const getInstructorDataController = async (
   }
 };
 
-
 export const updateInstructorDataController = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   let transaction;
 
@@ -336,7 +340,8 @@ export const updateInstructorDataController = async (
 
     if (!instructor.instructorProfile) {
       return Responder(res, {
-        message: "Instructor profile not found. Please complete onboarding first.",
+        message:
+          "Instructor profile not found. Please complete onboarding first.",
         httpCode: 404,
       });
     }
@@ -365,7 +370,7 @@ export const updateInstructorDataController = async (
       const userUpdateResult = await updateUserFields(
         instructor,
         { username, email, level },
-        transaction
+        transaction,
       );
 
       if (!userUpdateResult.success) {
@@ -390,7 +395,7 @@ export const updateInstructorDataController = async (
       const profileUpdateResult = await updateInstructorProfileFields(
         instructor.instructorProfile,
         { bio, basePrice, githubUrl, linkedinUrl, iitmProfileUrl, cgpa, level },
-        transaction
+        transaction,
       );
 
       if (!profileUpdateResult.success) {
@@ -409,7 +414,7 @@ export const updateInstructorDataController = async (
         instructor.instructorProfile.id,
         req.userId!,
         skills,
-        transaction
+        transaction,
       );
     }
 
@@ -424,7 +429,7 @@ export const updateInstructorDataController = async (
         instructor.instructorProfile.id,
         req.userId!,
         availabilities,
-        transaction
+        transaction,
       );
     }
 
@@ -493,3 +498,214 @@ export const updateInstructorDataController = async (
   }
 };
 
+// Searching and filtering based on course names
+export const getInstructorsController = async (req: Request, res: Response) => {
+  try {
+    // Extracting query params
+    const search = (req.query.search as string) || ""; // searching CT or Computational..
+    const level = (req.query.level as string) || "all"; // filtering based on level....
+
+    const whereCondition: WhereOptions = {};
+
+    // Adding level filter if provided , use all if not
+    if (level && level.toLowerCase() !== "all") {
+      whereCondition.level = level;
+    }
+
+    let instructorIds: string[] = [];
+
+    // If search term is provided, first find instructor IDs that have matching skills/courses
+    if (search && search.trim().length > 0) {
+      const matchingSkills = await Skill.findAll({
+        attributes: ["instructorProfileId"],
+        include: [
+          {
+            model: Course,
+            as: "course",
+            attributes: ["id"],
+            required: true,
+            where: {
+              [Op.or]: [
+                {
+                  name: {
+                    [Op.iLike]: `%${search}%`,
+                  },
+                },
+                {
+                  title: {
+                    [Op.iLike]: `%${search}%`,
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        raw: true,
+      });
+
+      // Extract unique instructor profile IDs
+      instructorIds = [
+        ...new Set(matchingSkills.map((skill) => skill.instructorProfileId)),
+      ];
+
+      if (instructorIds.length === 0) {
+        return Responder(res, {
+          message: "No instructors found matching your criteria",
+          httpCode: 404,
+        });
+      }
+
+      // Add instructor ID filter to the where condition
+      whereCondition.id = {
+        [Op.in]: instructorIds,
+      };
+    }
+
+    // Building the include array for all skills and courses
+    const includeArray: any[] = [
+      {
+        model: User,
+        as: "user",
+        attributes: ["id", "username", "level"],
+      },
+      {
+        model: Skill,
+        as: "skills",
+        attributes: ["id", "name"],
+        include: [
+          {
+            model: Course,
+            as: "course",
+            attributes: ["id", "name", "title"],
+          },
+        ],
+      },
+    ];
+
+    // Executing the query
+    const instructors = await InstructorProfiles.findAll({
+      where: whereCondition,
+      include: includeArray,
+      attributes: [
+        "id",
+        "instructorId",
+        "level",
+        "bio",
+        "basePrice",
+        "githubUrl",
+        "linkedinUrl",
+        "iitmProfileUrl",
+        "cgpa",
+      ],
+      order: [["createdAt", "DESC"]],
+      subQuery: false, // Prevents issues with nested includes
+    });
+
+    if (instructors.length === 0) {
+      return Responder(res, {
+        message: "Instructors retrieved successfully",
+        httpCode: 200,
+        data: { instructors: [] },
+      });
+    }
+
+    return Responder(res, {
+      message: "Instructors retrieved successfully",
+      httpCode: 200,
+      data: { instructors },
+    });
+  } catch (error) {
+    console.error("Error retreiving instructors", error);
+    return Responder(res, {
+      error: "INTERNAL_SERVER_ERROR",
+      message: "An unexpected error occurred on the server.",
+      httpCode: 500,
+    });
+  }
+};
+
+export const getInstructorProfileController = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    // Checking the user
+    const user = await findUserById(req.userId!);
+
+    if (!user || !user.username) {
+      return Responder(res, {
+        message: "User not found",
+        httpCode: 404,
+      });
+    }
+
+    const { instructorId } = req.params;
+
+    if (!instructorId) {
+      return Responder(res, {
+        message: "Instructor Id required",
+        httpCode: 404,
+      });
+    }
+
+    const instructor = await InstructorProfiles.findByPk(instructorId, {
+      attributes: [
+        "iitmProfileUrl",
+        "cgpa",
+        "level",
+        "bio",
+        "about",
+        "githubUrl",
+        "linkedinUrl",
+        "basePrice",
+        "instructorId",
+      ],
+    });
+
+    if (!instructor) {
+      return Responder(res, {
+        message: "Instructor not found",
+        httpCode: 404,
+      });
+    }
+
+    // Get instructor name from user profile
+    const instructorUser = await User.findByPk(instructor.instructorId, {
+      attributes: ["username"],
+    });
+
+    const skills = await getInstructorSkills(instructorId);
+    const languages = await getInstructorLanguages(instructorId);
+    const availabilities = await getInstructorAvailabilites(instructorId);
+
+    // Format response data
+    const responseData = {
+      name: instructorUser?.username || "",
+      bio: instructor.bio || "",
+      about: instructor.about || "",
+      level: instructor.level,
+      cgpa: instructor.cgpa,
+      instructorId: instructor.instructorId,
+      iitmProfileUrl: instructor.iitmProfileUrl,
+      linkedinUrl: instructor.linkedinUrl,
+      githubUrl: instructor.githubUrl,
+      basePrice: instructor.basePrice,
+      skills: skills || [],
+      languages: languages || [],
+      availabilities: availabilities || {},
+    };
+
+    return Responder(res, {
+      message: "Fetched profile successfully",
+      httpCode: 200,
+      data: responseData,
+    });
+  } catch (error) {
+    console.error("Error retreiving instructor profile", error);
+    return Responder(res, {
+      error: "INTERNAL_SERVER_ERROR",
+      message: "An unexpected error occurrend on the server.",
+      httpCode: 500,
+    });
+  }
+};
