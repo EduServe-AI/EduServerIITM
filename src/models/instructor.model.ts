@@ -15,6 +15,7 @@ interface InstructorAttributes {
   cgpa: number;
   level: LevelName;
   bio: string;
+  about: string;
   githubUrl: string;
   linkedinUrl: string;
   basePrice: Price;
@@ -23,7 +24,7 @@ interface InstructorAttributes {
 
 type InstructorCreationAttributes = Optional<
   InstructorAttributes,
-  "id" | "githubUrl" | "linkedinUrl"
+  "id" | "githubUrl" | "linkedinUrl" | "about"
 >;
 
 export default class InstructorProfiles
@@ -36,13 +37,14 @@ export default class InstructorProfiles
   public cgpa!: number;
   public level!: LevelName;
   public bio!: string;
+  public about!: string;
   public githubUrl!: string;
   public linkedinUrl!: string;
   public basePrice!: Price;
   // public isFeatured?: boolean;
 
   // Association properties
-  public subjects?: Skill[];
+  public skills?: Skill[];
   public languages?: UserLanguage[];
 
   // Static associations
@@ -81,6 +83,10 @@ InstructorProfiles.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    about: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     githubUrl: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -105,5 +111,5 @@ InstructorProfiles.init(
     modelName: "InstructorProfile",
     tableName: "instructorprofiles",
     timestamps: true,
-  }
+  },
 );

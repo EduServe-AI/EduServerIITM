@@ -2,6 +2,7 @@ import { Transaction } from "sequelize";
 import Availability from "../models/availability.model";
 import DayOfWeek from "../models/dayofWeek";
 import InstructorProfiles from "../models/instructor.model";
+import Language from "../models/language.model";
 import Skill from "../models/skill.model";
 import AvailabilityTimeSlot from "../models/timeSlot.model";
 import User from "../models/user.model";
@@ -63,7 +64,7 @@ interface AvailabilityPayload {
 export const updateUserFields = async (
   user: User,
   updates: UserUpdatePayload,
-  transaction: Transaction
+  transaction: Transaction,
 ): Promise<{ success: boolean; error?: string }> => {
   const userUpdates: Partial<{
     username: string;
@@ -118,7 +119,7 @@ export const updateUserFields = async (
 export const updateInstructorProfileFields = async (
   instructorProfile: InstructorProfiles,
   updates: InstructorProfileUpdatePayload,
-  transaction: Transaction
+  transaction: Transaction,
 ): Promise<{ success: boolean; error?: string }> => {
   const profileUpdates: Partial<{
     bio: string;
@@ -184,7 +185,7 @@ export const updateInstructorSkills = async (
   instructorProfileId: string,
   userId: string,
   newSkills: SkillPayload[],
-  transaction: Transaction
+  transaction: Transaction,
 ): Promise<void> => {
   // Retrieve existing skills
   const existingSkills = await Skill.findAll({
@@ -193,7 +194,7 @@ export const updateInstructorSkills = async (
 
   // Create maps for efficient comparison
   const existingSkillMap = new Map(
-    existingSkills.map((skill) => [skill.name, skill])
+    existingSkills.map((skill) => [skill.name, skill]),
   );
   const newSkillNames = new Set(newSkills.map((skill) => skill.name));
 
@@ -235,7 +236,7 @@ export const updateInstructorSkills = async (
     // Add new skills with course mapping
     if (skillsToAdd.length > 0) {
       const courseIdPromises = skillsToAdd.map((skill) =>
-        getCourseId(skill.name)
+        getCourseId(skill.name),
       );
 
       const resolvedCourseIds = await Promise.all(courseIdPromises);
@@ -244,7 +245,7 @@ export const updateInstructorSkills = async (
 
         if (!courseId) {
           throw new Error(
-            `Failed to find a corresponding course for subject: ${skill.name}`
+            `Failed to find a corresponding course for subject: ${skill.name}`,
           );
         }
 
@@ -269,13 +270,13 @@ export const updateInstructorSkills = async (
             courseId: courseId,
             name: payload.name,
           },
-          { transaction }
+          { transaction },
         );
       }
     }
   } catch (error) {
     throw new Error(
-      `Failed to update instructor skills: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to update instructor skills: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 };
@@ -287,7 +288,7 @@ export const updateInstructorSkills = async (
 export const updateUserLanguages = async (
   userId: string,
   newLanguages: LanguagePayload[],
-  transaction: Transaction
+  transaction: Transaction,
 ): Promise<void> => {
   // Retrieve existing languages
   const existingLanguages = await UserLanguage.findAll({
@@ -302,7 +303,7 @@ export const updateUserLanguages = async (
 
   // Create maps for efficient comparison
   const existingLanguageMap = new Map(
-    existingLanguages.map((ul) => [ul.language?.name || ul.languageId, ul.id])
+    existingLanguages.map((ul) => [ul.language?.name || ul.languageId, ul.id]),
   );
   const newLanguageNames = new Set(newLanguages.map((l) => l.language.name));
 
@@ -338,7 +339,7 @@ export const updateUserLanguages = async (
     // Add new languages with language mapping
     if (languagesToAdd.length > 0) {
       const languageIdPromises = languagesToAdd.map((language) =>
-        getLanguageId(language.language.name)
+        getLanguageId(language.language.name),
       );
 
       const resolvedLanguageIds = await Promise.all(languageIdPromises);
@@ -347,7 +348,7 @@ export const updateUserLanguages = async (
 
         if (!languageId) {
           throw new Error(
-            `Failed to find a corresponding language: ${language.language.name}`
+            `Failed to find a corresponding language: ${language.language.name}`,
           );
         }
 
@@ -361,7 +362,7 @@ export const updateUserLanguages = async (
     }
   } catch (error) {
     throw new Error(
-      `Failed to update user languages: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to update user languages: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 };
@@ -374,7 +375,7 @@ export const updateInstructorAvailabilities = async (
   instructorProfileId: string,
   userId: string,
   newAvailabilities: AvailabilityPayload[],
-  transaction: Transaction
+  transaction: Transaction,
 ): Promise<void> => {
   // Retrieve existing availabilities with their time slots
   const existingAvailabilities = await Availability.findAll({
@@ -391,7 +392,7 @@ export const updateInstructorAvailabilities = async (
 
   // Create map for existing availabilities by day
   const existingAvailabilityMap = new Map(
-    existingAvailabilities.map((av) => [av.dayOfWeekId, av])
+    existingAvailabilities.map((av) => [av.dayOfWeekId, av]),
   );
   const newDayIds = new Set<number>();
 
@@ -406,10 +407,10 @@ export const updateInstructorAvailabilities = async (
 
       if (!dayOfWeekId) {
         console.warn(
-          `Could not find a day of the week for: ${availability.dayOfWeek?.name}`
+          `Could not find a day of the week for: ${availability.dayOfWeek?.name}`,
         );
         throw new Error(
-          `Invalid day of the week: ${availability.dayOfWeek?.name}`
+          `Invalid day of the week: ${availability.dayOfWeek?.name}`,
         );
       }
 
@@ -422,7 +423,7 @@ export const updateInstructorAvailabilities = async (
           {
             isAvailable: availability.isAvailable,
           },
-          { transaction }
+          { transaction },
         );
 
         // Handle time slots update
@@ -461,7 +462,7 @@ export const updateInstructorAvailabilities = async (
             isAvailable: availability.isAvailable,
             userId: userId,
           },
-          { transaction }
+          { transaction },
         );
 
         // Create time slots if available
@@ -498,7 +499,142 @@ export const updateInstructorAvailabilities = async (
     }
   } catch (error) {
     throw new Error(
-      `Failed to update instructor availabilities: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to update instructor availabilities: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+};
+
+/*
+ * Helper to get instructor skills
+ */
+export const getInstructorSkills = async (instructorProfileId: string) => {
+  // Logic to get instructor skills
+  const instructorProfile = await InstructorProfiles.findByPk(
+    instructorProfileId,
+    {
+      include: [
+        {
+          model: Skill,
+          as: "skills",
+          attributes: ["name", "courseId"],
+        },
+      ],
+    },
+  );
+
+  if (!instructorProfile) {
+    console.log("returned null");
+    return null;
+  }
+
+  const subjects = instructorProfile.skills;
+
+  let skills: string[] = [];
+
+  subjects?.map((sub) => skills.push(sub.name));
+
+  return skills;
+};
+
+/*
+ * Helper to get instructor languages
+ */
+export const getInstructorLanguages = async (instructorProfileId: string) => {
+  // Logic to get instructor languages
+
+  const instructorProfile =
+    await InstructorProfiles.findByPk(instructorProfileId);
+
+  if (!instructorProfile) {
+    console.log("returned null");
+    return null;
+  }
+
+  // Retreiving the corresponding user object
+  const user = await User.findByPk(instructorProfile.instructorId, {
+    include: [
+      {
+        model: UserLanguage,
+        as: "userLanguages",
+        include: [
+          {
+            model: Language,
+            as: "language",
+            attributes: ["name"],
+          },
+        ],
+      },
+    ],
+  });
+
+  const instructorLanguages = user?.userLanguages;
+
+  let languages: string[] = [];
+
+  instructorLanguages?.map((lang) => languages.push(lang.language?.name || ""));
+
+  return languages;
+};
+
+/*
+ * Helper to get instructor availabilites
+ */
+export const getInstructorAvailabilites = async (
+  instructorProfileId: string,
+) => {
+  try {
+    // Fetch all availabilities for the instructor with their time slots
+    const availabilities = await Availability.findAll({
+      where: { instructorProfileId },
+      include: [
+        {
+          model: DayOfWeek,
+          as: "dayOfWeek",
+          attributes: ["id", "name"],
+        },
+        {
+          model: AvailabilityTimeSlot,
+          as: "timeSlots",
+          attributes: ["startTime", "endTime"],
+        },
+      ],
+    });
+
+    if (!availabilities || availabilities.length === 0) {
+      return {};
+    }
+
+    // Format the data into the desired structure
+    const formattedAvailability: {
+      [key: string]: string[];
+    } = {};
+
+    availabilities.forEach((availability) => {
+      const dayName = availability.dayOfWeek?.name || "";
+
+      if (
+        availability.isAvailable &&
+        availability.timeSlots &&
+        availability.timeSlots.length > 0
+      ) {
+        // Format time slots as "HH:MM - HH:MM"
+        const timeSlots = availability.timeSlots.map((slot) => {
+          const startTime = slot.startTime;
+          const endTime = slot.endTime;
+          return `${startTime} - ${endTime}`;
+        });
+        formattedAvailability[dayName] = timeSlots;
+      } else {
+        // If not available or no time slots, return empty array
+        formattedAvailability[dayName] = [];
+      }
+    });
+
+    return formattedAvailability;
+  } catch (error) {
+    console.error("Error fetching instructor availabilities:", error);
+    throw new Error(
+      `Failed to fetch instructor availabilities: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 };
