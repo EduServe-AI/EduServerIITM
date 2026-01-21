@@ -527,13 +527,7 @@ export const getInstructorSkills = async (instructorProfileId: string) => {
     return null;
   }
 
-  const subjects = instructorProfile.skills;
-
-  let skills: string[] = [];
-
-  subjects?.map((sub) => skills.push(sub.name));
-
-  return skills;
+  return instructorProfile.skills?.map((skill) => skill.name) ?? [];
 };
 
 /*
@@ -549,31 +543,18 @@ export const getInstructorLanguages = async (instructorProfileId: string) => {
     console.log("returned null");
     return null;
   }
-
-  // Retreiving the corresponding user object
-  const user = await User.findByPk(instructorProfile.instructorId, {
+  const userLanguages = await UserLanguage.findAll({
+    where: { userId: instructorProfile.instructorId },
     include: [
       {
-        model: UserLanguage,
-        as: "userLanguages",
-        include: [
-          {
-            model: Language,
-            as: "language",
-            attributes: ["name"],
-          },
-        ],
+        model: Language,
+        as: "language",
+        attributes: ["name"],
       },
     ],
   });
 
-  const instructorLanguages = user?.userLanguages;
-
-  let languages: string[] = [];
-
-  instructorLanguages?.map((lang) => languages.push(lang.language?.name || ""));
-
-  return languages;
+  return userLanguages.map((ul) => ul.language?.name || "");
 };
 
 /*

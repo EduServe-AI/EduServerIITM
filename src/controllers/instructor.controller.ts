@@ -603,8 +603,9 @@ export const getInstructorsController = async (req: Request, res: Response) => {
 
     if (instructors.length === 0) {
       return Responder(res, {
-        message: "No instructors found matching your criteria",
-        httpCode: 404,
+        message: "Instructors retrieved successfully",
+        httpCode: 200,
+        data: { instructors: [] },
       });
     }
 
