@@ -8,6 +8,7 @@ import Enrollment from "./enrollment.model";
 import InstructorProfiles from "./instructor.model";
 import Language from "./language.model";
 import Level from "./level.model";
+import Session from "./session.model";
 import Skill from "./skill.model";
 import AvailabilityTimeSlot from "./timeSlot.model";
 import User from "./user.model";
@@ -314,6 +315,23 @@ export const setUpAssociations = () => {
     foreignKey: "userId",
     as: "user",
   });
+
+  User.hasMany(Session, {
+    foreignKey: "host_id",
+    as: "hostedSessions",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  User.hasMany(Session, {
+    foreignKey: "guest_id",
+    as: "guestSessions",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  Session.belongsTo(User, { foreignKey: "host_id", as: "host" });
+  Session.belongsTo(User, { foreignKey: "guest_id", as: "guest" });
 
   console.log("Associations set up successfully!");
 };

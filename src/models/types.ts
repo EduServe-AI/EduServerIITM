@@ -95,4 +95,19 @@ export interface KnowledgeBaseAttributes {
   weekNumber?: number | null;
 }
 
+export interface SessionAttributes {
+  id: string;
+  host_id: string;
+  guest_id: string;
+  title: string;
+  description: string | undefined | null;
+  start_time: string;
+  duration_minutes: string;
+  end_time: string;
+  stream_call_id: string;
+  status: "scheduled" | "active" | "ended";
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 // Defining a custom
