@@ -97,15 +97,15 @@ export interface KnowledgeBaseAttributes {
 
 export interface SessionAttributes {
   id: string;
-  host_id: string;
-  guest_id: string;
+  studentId: string;
+  instructorId: string;
   title: string;
   description: string | undefined | null;
   start_time: string;
   duration_minutes: string;
   end_time: string;
   stream_call_id: string;
-  status: "scheduled" | "active" | "ended";
+  status: "scheduled" | "completed" | "cancelled";
   createdAt?: Date;
   updatedAt?: Date;
 }

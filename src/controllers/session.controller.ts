@@ -8,7 +8,7 @@ import streamClient from "../utils/stream";
 
 export const createSessionController = async (req: Request, res: Response) => {
   try {
-    const { guestId, startTime, title, description, durationMinutes } =
+    const { instructorId, startTime, title, description, durationMinutes } =
       req.body;
     // getting the user by id
     const user = await findUserById(req.userId!);
@@ -27,28 +27,29 @@ export const createSessionController = async (req: Request, res: Response) => {
 
     // create stream video call
     // 1. Ensure users exist with metadata
-    const guest = await findUserById(guestId);
-    if (!guest) {
+    const instructor = await findUserById(instructorId);
+    if (!instructor) {
       return responder(res, {
-        message: "Guest user not found",
+        message: "Instructor not found",
         httpCode: 404,
       });
     }
 
     console.log("before user upstream");
 
-    // await streamClient.upsertUsers([
-    //   {
-    //     id: req.userId,
-    //     name: user.username || user.email,
-    //     role: user.role || undefined,
-    //   },
-    //   {
-    //     id: guestId,
-    //     name: guest.username || guest.email,
-    //     role: guest.role || undefined,
-    //   },
-    // ]);
+    // Creating the user in the streams system
+    await streamClient.upsertUsers([
+      {
+        id: req.userId!,
+        name: user.username || user.email,
+        role: "user",
+      },
+      {
+        id: instructorId,
+        name: instructor.username || instructor.email,
+        role: "user",
+      },
+    ]);
 
     console.log("test user");
 
@@ -59,18 +60,17 @@ export const createSessionController = async (req: Request, res: Response) => {
         data: {
           starts_at: new Date(startTime),
           created_by_id: req.userId,
-          members: [{ user_id: req.userId }, { user_id: guestId }],
+          members: [{ user_id: req.userId }, { user_id: instructorId }],
         },
       });
 
-    
     console.log("test stream data", streamData);
 
     const savedSession = await Session.create({
       title: title,
       description: description,
-      host_id: req.userId!,
-      guest_id: guestId,
+      studentId: req.userId!,
+      instructorId: instructorId,
       start_time: startTime,
       duration_minutes: durationMinutes,
       end_time: end.toISOString(),
@@ -79,58 +79,20 @@ export const createSessionController = async (req: Request, res: Response) => {
     });
 
     console.log("test creation", savedSession);
-    res.status(201).json({ savedSession });
+    // res.status(201).json({savedSession });
+    return responder(res, {
+      message: "Session scheduled successfully",
+      httpCode: 201,
+      data: {
+        savedSession,
+      },
+    });
   } catch (error) {
     console.error("Error while create session:", error);
     return res.status(500).json({
       message: "Failed to create session",
       error: error instanceof Error ? error.message : "Unknown error",
     });
-  }
-};
-
-export const getSessionController = async (req: Request, res: Response) => {
-  try {
-    // getting the user by id
-    const user = await findUserById(req.userId!);
-    if (!user) {
-      return responder(res, {
-        message: "User not found",
-        httpCode: 404,
-      });
-    }
-
-    let whereClause = {};
-
-    if (user.role === "student") {
-      whereClause = { host_id: req.userId };
-    } else if (user.role === "instructor") {
-      whereClause = { guest_id: req.userId };
-    } else {
-      return res.status(400).json({ message: "Invalid role" });
-    }
-
-    const sessions = await Session.findAll({
-      where: whereClause,
-      order: [["start_time", "ASC"]],
-      include: [
-        {
-          model: User,
-          as: "host",
-          attributes: ["id", "username", "email"],
-        },
-        {
-          model: User,
-          as: "guest",
-          attributes: ["id", "username", "email"],
-        },
-      ],
-    });
-
-    return res.json(sessions);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Failed to fetch sessions" });
   }
 };
 
@@ -144,7 +106,10 @@ export const joinSessionController = async (req: Request, res: Response) => {
     }
 
     // Verify user is a participant
-    if (session.host_id !== req.userId && session.guest_id !== req.userId) {
+    if (
+      session.studentId !== req.userId &&
+      session.instructorId !== req.userId
+    ) {
       return res.status(403).json({
         message: "You are not authorized to join this session",
       });
@@ -162,9 +127,6 @@ export const joinSessionController = async (req: Request, res: Response) => {
       return res.status(403).json({ message: "Call already ended" });
     }
 
-    session.status = "active";
-    await session.save();
-
     res.status(200).json({ streamCallId: session.stream_call_id });
   } catch (error) {
     console.error(error);
@@ -181,9 +143,9 @@ export const endSessionController = async (req: Request, res: Response) => {
     }
 
     // Verify user is the host
-    if (session.host_id !== req.userId) {
+    if (session.studentId !== req.userId) {
       return res.status(403).json({
-        message: "Only the host can end the session",
+        message: "Only the student can end the session",
       });
     }
 
@@ -191,7 +153,7 @@ export const endSessionController = async (req: Request, res: Response) => {
     await streamClient.video.call("default", session.stream_call_id).end();
 
     // Update session status
-    session.status = "ended";
+    session.status = "completed";
     await session.save();
 
     res.status(200).json({ message: "Session ended successfully" });
@@ -220,5 +182,69 @@ export const tokenSessionController = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Failed to genarate token" });
+  }
+};
+
+// Retreiving the list of all the sessions of the user
+export const getSessionListController = async (req: Request, res: Response) => {
+  try {
+    const user = await findUserById(req.userId!);
+
+    const role = user?.role;
+
+    if (!user) {
+      return responder(res, {
+        message: "User not found",
+        httpCode: 404,
+      });
+    }
+
+    let whereClause = {};
+
+    if (role === "student") {
+      whereClause = { studentId: req.userId };
+    } else if (role === "instructor") {
+      whereClause = { instructorId: req.userId };
+    } else {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    const userSessions = await Session.findAll({
+      where: whereClause,
+      order: [["start_time", "ASC"]],
+      include: [
+        {
+          model: User,
+          as: "student",
+          attributes: ["username", "email"],
+        },
+        {
+          model: User,
+          as: "instructor",
+          attributes: ["username", "email"],
+        },
+      ],
+    });
+
+    if (userSessions.length === 0) {
+      return responder(res, {
+        message: "User has no sessions",
+        httpCode: 404,
+      });
+    }
+
+    return responder(res, {
+      message: "Upcoming sessions retrieved successfully",
+      httpCode: 200,
+      data: {
+        userSessions,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return responder(res, {
+      message: "Internal Server Error",
+      httpCode: 500,
+    });
   }
 };

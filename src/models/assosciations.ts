@@ -317,21 +317,21 @@ export const setUpAssociations = () => {
   });
 
   User.hasMany(Session, {
-    foreignKey: "host_id",
-    as: "hostedSessions",
+    foreignKey: "studentId",
+    as: "studentSessions",
     onDelete: "CASCADE",
     onUpdate: "CASCADE",
   });
 
   User.hasMany(Session, {
-    foreignKey: "guest_id",
-    as: "guestSessions",
+    foreignKey: "instructorId",
+    as: "instructorSessions",
     onDelete: "CASCADE",
     onUpdate: "CASCADE",
   });
 
-  Session.belongsTo(User, { foreignKey: "host_id", as: "host" });
-  Session.belongsTo(User, { foreignKey: "guest_id", as: "guest" });
+  Session.belongsTo(User, { foreignKey: "studentId", as: "student" });
+  Session.belongsTo(User, { foreignKey: "instructorId", as: "instructor" });
 
   console.log("Associations set up successfully!");
 };

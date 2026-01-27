@@ -10,15 +10,15 @@ class Session
   implements SessionAttributes
 {
   public id!: string;
-  public host_id!: string;
-  public guest_id!: string;
+  public studentId!: string;
+  public instructorId!: string;
   public title!: string;
   public description: string | null | undefined;
   public start_time!: string;
   public duration_minutes!: string;
   public end_time!: string;
   public stream_call_id!: string;
-  public status!: "scheduled" | "active" | "ended";
+  public status!: "scheduled" | "completed" | "cancelled";
 
   // Optional: timestamps
   public readonly createdAt!: Date;
@@ -32,12 +32,12 @@ Session.init(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    host_id: {
+    studentId: {
       type: DataTypes.UUID,
       allowNull: false,
     },
 
-    guest_id: {
+    instructorId: {
       type: DataTypes.UUID,
       allowNull: false,
     },
@@ -72,7 +72,7 @@ Session.init(
     },
 
     status: {
-      type: DataTypes.ENUM("scheduled", "active", "ended"),
+      type: DataTypes.ENUM("scheduled", "completed", "cancelled"),
       defaultValue: "scheduled",
     },
   },
@@ -81,7 +81,7 @@ Session.init(
     modelName: "Session",
     tableName: "sessions",
     timestamps: true,
-  }
+  },
 );
 
 export default Session;

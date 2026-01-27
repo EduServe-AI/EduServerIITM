@@ -18,7 +18,7 @@ async function initializeDatabase() {
   try {
     await sequelize.authenticate();
     console.log(
-      "✅ Connection to the database has been established successfully"
+      "✅ Connection to the database has been established successfully",
     );
     setUpAssociations();
     await syncModels(); // Everyone should practice migrations
