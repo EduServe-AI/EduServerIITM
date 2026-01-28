@@ -1,19 +1,20 @@
-import User from "./user.model";
-import Level from "./level.model";
-import Course from "./course.model";
-import Enrollment from "./enrollment.model";
-import InstructorProfiles from "./instructor.model";
-import Skill from "./skill.model";
-import Language from "./language.model";
-import UserLanguage from "./userLanguage.model";
 import Availability from "./availability.model";
-import DayOfWeek from "./dayofWeek";
-import AvailabilityTimeSlot from "./timeSlot.model";
 import Bots from "./bot.model";
 import Chats from "./chat.model";
 import ChatMessages from "./chatMessage.model";
+import Course from "./course.model";
+import DayOfWeek from "./dayofWeek";
+import Enrollment from "./enrollment.model";
+import InstructorProfiles from "./instructor.model";
+import Language from "./language.model";
+import Level from "./level.model";
+import Skill from "./skill.model";
+import AvailabilityTimeSlot from "./timeSlot.model";
+import User from "./user.model";
+import UserLanguage from "./userLanguage.model";
 // import KnowledgeBase from "./knowledgeBase.model";
 import { initializeKnowledgeBase } from "../services/knowledgeBase.service";
+import Session from "./session.model";
 
 export const syncModels = async () => {
   await User.sync({ alter: true });
@@ -31,6 +32,7 @@ export const syncModels = async () => {
   await Chats.sync({ alter: true });
   await ChatMessages.sync({ alter: true });
   // await KnowledgeBase.sync({ alter: true });
+  await Session.sync({ alter: true });
 
   await initializeKnowledgeBase();
 };
