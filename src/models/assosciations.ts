@@ -1,17 +1,18 @@
-import User from "./user.model";
-import Level from "./level.model";
-import Course from "./course.model";
-import Enrollment from "./enrollment.model";
-import InstructorProfiles from "./instructor.model";
-import Skill from "./skill.model";
-import Language from "./language.model";
 import Availability from "./availability.model";
-import UserLanguage from "./userLanguage.model";
-import DayOfWeek from "./dayofWeek";
-import AvailabilityTimeSlot from "./timeSlot.model";
 import Bots from "./bot.model";
 import Chats from "./chat.model";
 import ChatMessages from "./chatMessage.model";
+import Course from "./course.model";
+import DayOfWeek from "./dayofWeek";
+import Enrollment from "./enrollment.model";
+import InstructorProfiles from "./instructor.model";
+import Language from "./language.model";
+import Level from "./level.model";
+import Session from "./session.model";
+import Skill from "./skill.model";
+import AvailabilityTimeSlot from "./timeSlot.model";
+import User from "./user.model";
+import UserLanguage from "./userLanguage.model";
 
 // setup associations
 export const setUpAssociations = () => {
@@ -116,6 +117,12 @@ export const setUpAssociations = () => {
   Skill.belongsTo(User, {
     foreignKey: "userId",
     as: "instructor",
+  });
+
+  // -------------------- Relationship between Skill and Course --------
+  Skill.belongsTo(Course, {
+    foreignKey: "courseId",
+    as: "course",
   });
 
   // Add new association for Availability
@@ -309,7 +316,24 @@ export const setUpAssociations = () => {
     as: "user",
   });
 
+  User.hasMany(Session, {
+    foreignKey: "studentId",
+    as: "studentSessions",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  User.hasMany(Session, {
+    foreignKey: "instructorId",
+    as: "instructorSessions",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  Session.belongsTo(User, { foreignKey: "studentId", as: "student" });
+  Session.belongsTo(User, { foreignKey: "instructorId", as: "instructor" });
+
   console.log("Associations set up successfully!");
 };
 
-export { User, Level, Course, Enrollment };
+export { Course, Enrollment, Level, User };
