@@ -6,10 +6,10 @@ import Bots from "../models/bot.model";
 
 export const createSystemPrompt = async (
   botId: string,
-  courseTitle : string,
+  courseTitle: string,
   username: string,
   contextText: string,
-  sourcesString: string
+  sourcesString: string,
 ) => {
   const bot = await Bots.findByPk(botId);
 
@@ -63,7 +63,7 @@ export const Embedder = async (content: string, type: "document" | "query") => {
       : TaskType.RETRIEVAL_QUERY;
 
   const embedder = new GoogleGenerativeAIEmbeddings({
-    model: "text-embedding-004", // 768 dimensions
+    model: "gemini-embedding-001", // 768 dimensions
     apiKey: process.env.GEMINI_API_KEY,
     taskType: taskType,
   });
@@ -110,7 +110,7 @@ export const formatContext = async (
   contextChunks: {
     content: string;
     source_filename: string;
-  }[]
+  }[],
 ) => {
   const contextText = contextChunks
     .map(
@@ -119,7 +119,7 @@ export const formatContext = async (
   [Context Chunk ${index + 1}]
   ${chunk.content}
   -------
-  `
+  `,
     )
     .join("\n");
 
