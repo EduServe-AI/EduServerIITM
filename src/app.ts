@@ -1,6 +1,6 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import express, { NextFunction, Request, Response } from "express";
+import express, { Request, Response } from "express";
 import morgan from "morgan";
 import passport from "./config/passport.config";
 import authRoutes from "./routes/auth.routes";
@@ -13,23 +13,8 @@ import levelRoutes from "./routes/level.routes";
 import sessionRoutes from "./routes/session.routes";
 import studentRoutes from "./routes/student.routes";
 import userRoutes from "./routes/user.routes";
-import { initializeDatabase } from "./utils/bootstrap";
 
 const app = express();
-
-// Database initialization middleware
-app.use(async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    await initializeDatabase();
-    next();
-  } catch (error) {
-    console.error("Failed to initialize database:", error);
-    res.status(500).json({ 
-        error: "Internal Server Error", 
-        message: "Database initialization failed" 
-    });
-  }
-});
 
 // Handling Cors
 app.use(
