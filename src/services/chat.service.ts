@@ -8,7 +8,11 @@ type Chat = import("../models/chat.model").default;
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-export const prepareLLMChat = async (chat: Chat, userMessage: string , courseTitle : string) => {
+export const prepareLLMChat = async (
+  chat: Chat,
+  userMessage: string,
+  courseTitle: string,
+) => {
   if (!chat || !chat.bot) {
     throw new Error("Chat Id with bot info is required");
   }
@@ -47,7 +51,7 @@ export const prepareLLMChat = async (chat: Chat, userMessage: string , courseTit
     courseTitle,
     user.username!,
     contextText,
-    sourcesString
+    sourcesString,
   );
 
   return groq.chat.completions.create({
