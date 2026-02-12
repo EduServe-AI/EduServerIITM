@@ -145,7 +145,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export const generateResponseController = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   // Checking the user
   const user = await findUserById(req.userId!);
@@ -208,7 +208,6 @@ export const generateResponseController = async (
     });
   }
 
-
   const { userMessage, botMessage } = req.body;
 
   if (!userMessage || !botMessage) {
@@ -233,7 +232,11 @@ export const generateResponseController = async (
     });
 
     // Helper function we pass chatId , and well get an LLM Object loaded with full context
-    const stream = await prepareLLMChat(chat, userMessage.content , course.title);
+    const stream = await prepareLLMChat(
+      chat,
+      userMessage.content,
+      course.title,
+    );
 
     // Set headers for streaming
     res.setHeader("Content-Type", "text/plain");
@@ -318,13 +321,6 @@ export const getUserChatsController = async (req: Request, res: Response) => {
 
   try {
     const userChats = user.chats?.sort();
-
-    if (!userChats || userChats.length === 0) {
-      return Responder(res, {
-        message: "User has no chats",
-        httpCode: 404,
-      });
-    }
 
     return Responder(res, {
       message: "User Chats Retreived successfully",

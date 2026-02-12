@@ -1,6 +1,6 @@
+import pgvector from "pgvector";
 import { QueryTypes } from "sequelize";
 import sequelize from "../config/db.config";
-import pgvector from "pgvector";
 
 interface chunkType {
   content: string;
@@ -81,7 +81,7 @@ export const countKnowledgeBaseRows = async () => {
   } catch (error: any) {
     console.error(
       "❌ Error in counting rows of  knowledge_base table: ",
-      error
+      error,
     );
     throw new Error(error);
   }
@@ -127,7 +127,7 @@ export const insertKnowledgeChunk = async (chunk: chunkType) => {
   } catch (error: any) {
     console.error(
       "❌ Error in inserting chunks into knowledge_base table: ",
-      error
+      error,
     );
     throw new Error(error);
   }
@@ -136,7 +136,7 @@ export const insertKnowledgeChunk = async (chunk: chunkType) => {
 export const findSimilarChunks = async (
   embedding: number[],
   courseId: string,
-  limit: number = 5
+  limit: number = 5,
 ) => {
   // Formatting the embedding vector for a raw sql query
   const embeddingSql = pgvector.toSql(embedding);
@@ -150,6 +150,8 @@ export const findSimilarChunks = async (
       },
       type: QueryTypes.SELECT,
     });
+
+    console.log("retreived chunks", results);
 
     return results as { content: string; source_filename: string }[];
   } catch (error: any) {
