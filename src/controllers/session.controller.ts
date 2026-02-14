@@ -226,13 +226,6 @@ export const getSessionListController = async (req: Request, res: Response) => {
       ],
     });
 
-    if (userSessions.length === 0) {
-      return responder(res, {
-        message: "User has no sessions",
-        httpCode: 404,
-      });
-    }
-
     return responder(res, {
       message: "Upcoming sessions retrieved successfully",
       httpCode: 200,

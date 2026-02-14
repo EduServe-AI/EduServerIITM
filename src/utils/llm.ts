@@ -1,15 +1,18 @@
+import { GoogleGenAI } from "@google/genai";
 import { TaskType } from "@google/generative-ai";
 import { AzureBlobStorageFileLoader } from "@langchain/community/document_loaders/web/azure_blob_storage_file";
-import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import config from "../config/constants";
 import Bots from "../models/bot.model";
 
+// Initializing the google genai client
+const googleGenAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+
 export const createSystemPrompt = async (
   botId: string,
-  courseTitle : string,
+  courseTitle: string,
   username: string,
   contextText: string,
-  sourcesString: string
+  sourcesString: string,
 ) => {
   const bot = await Bots.findByPk(botId);
 
@@ -56,19 +59,29 @@ export const createSystemPrompt = async (
   return prompt;
 };
 
-export const Embedder = async (content: string, type: "document" | "query") => {
+export const Embedder = async (
+  content: string,
+  type: "document" | "query",
+): Promise<number[]> => {
   const taskType =
     type === "document"
       ? TaskType.RETRIEVAL_DOCUMENT
       : TaskType.RETRIEVAL_QUERY;
 
-  const embedder = new GoogleGenerativeAIEmbeddings({
-    model: "text-embedding-004", // 768 dimensions
-    apiKey: process.env.GEMINI_API_KEY,
-    taskType: taskType,
+  const response = await googleGenAI.models.embedContent({
+    model: "gemini-embedding-001",
+    contents: content,
+    config: {
+      outputDimensionality: 768,
+      taskType: taskType,
+    },
   });
 
-  return embedder.embedQuery(content);
+  if (!response.embeddings) {
+    throw new Error("Failed to generate embeddings");
+  }
+  // Assuming response.embeddings is an array of numbers
+  return response.embeddings[0].values as number[];
 };
 
 export const documentLoader = async (courseName: string, blobName?: string) => {
@@ -110,7 +123,7 @@ export const formatContext = async (
   contextChunks: {
     content: string;
     source_filename: string;
-  }[]
+  }[],
 ) => {
   const contextText = contextChunks
     .map(
@@ -119,7 +132,7 @@ export const formatContext = async (
   [Context Chunk ${index + 1}]
   ${chunk.content}
   -------
-  `
+  `,
     )
     .join("\n");
 
