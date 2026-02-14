@@ -9,6 +9,7 @@ import { populateLevelsIfEmpty } from "../scripts/populateLevels";
 
 let isInitialized = false;
 let initializationPromise: Promise<void> | null = null;
+let associationsInitialized = false;
 
 export const initializeDatabase = async () => {
   if (isInitialized) return;
@@ -24,7 +25,11 @@ export const initializeDatabase = async () => {
       console.log(
         "✅ Connection to the database has been established successfully",
       );
-      setUpAssociations();
+      
+      if (!associationsInitialized) {
+        setUpAssociations();
+        associationsInitialized = true;
+      }
       
       // In production, we might want to be careful with sync({ alter: true })
       // But for now we keep the existing logic
