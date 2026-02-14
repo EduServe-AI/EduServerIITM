@@ -9,6 +9,9 @@ if (process.env.NODE_ENV !== "production") {
       console.log(`🚀 Server running on port ${config.port}`);
     });
   });
+} else {
+  // For serverless production, fire-and-forget initialization on first invocation
+  initializeDatabase().catch(console.error);
 } 
 
 // Export for Vercel serverless
