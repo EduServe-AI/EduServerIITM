@@ -43,7 +43,7 @@ if (process.env.NODE_ENV !== "production") {
     });
   });
 } else {
-  // For serverless, initialize on first request (fire and forget)
+  // For serverless production, fire-and-forget initialization on first invocation
   initializeDatabase().catch(console.error);
 }
 

@@ -17,22 +17,27 @@ import { initializeKnowledgeBase } from "../services/knowledgeBase.service";
 import Session from "./session.model";
 
 export const syncModels = async () => {
-  await User.sync({ alter: true });
-  await Level.sync({ alter: true });
-  await Course.sync({ alter: true });
-  await Enrollment.sync({ alter: true });
-  await InstructorProfiles.sync({ alter: true });
-  await Skill.sync({ alter: true });
-  await Language.sync({ alter: true });
-  await UserLanguage.sync({ alter: true });
-  await DayOfWeek.sync({ alter: true });
-  await Availability.sync({ alter: true });
-  await AvailabilityTimeSlot.sync({ alter: true });
-  await Bots.sync({ alter: true });
-  await Chats.sync({ alter: true });
-  await ChatMessages.sync({ alter: true });
-  // await KnowledgeBase.sync({ alter: true });
-  await Session.sync({ alter: true });
+  // Only use alter: true in development to avoid table locking and performance issues in production
+  const syncOptions = process.env.NODE_ENV === "development" ? { alter: true } : {};
+  
+  console.log(`Syncing models with options: ${JSON.stringify(syncOptions)}`);
+
+  await User.sync(syncOptions);
+  await Level.sync(syncOptions);
+  await Course.sync(syncOptions);
+  await Enrollment.sync(syncOptions);
+  await InstructorProfiles.sync(syncOptions);
+  await Skill.sync(syncOptions);
+  await Language.sync(syncOptions);
+  await UserLanguage.sync(syncOptions);
+  await DayOfWeek.sync(syncOptions);
+  await Availability.sync(syncOptions);
+  await AvailabilityTimeSlot.sync(syncOptions);
+  await Bots.sync(syncOptions);
+  await Chats.sync(syncOptions);
+  await ChatMessages.sync(syncOptions);
+  // await KnowledgeBase.sync(syncOptions);
+  await Session.sync(syncOptions);
 
   await initializeKnowledgeBase();
 };
