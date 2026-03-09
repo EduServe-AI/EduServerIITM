@@ -13,6 +13,7 @@
     "embed:full": "ts-node src/scripts/populateEmbeddings.ts",
     "embed": "ts-node src/scripts/populateEmbeddingsIncremental.ts",
     "embed:course": "ts-node src/scripts/populateEmbeddings.ts",
+    "setup:maths1-store": "ts-node src/scripts/setupMaths1FileSearchStore.ts",
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo",
     "migrate:status": "sequelize-cli db:migrate:status",

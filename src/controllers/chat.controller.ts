@@ -1,11 +1,12 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Content, GoogleGenAI } from "@google/genai";
 import { Request, Response } from "express";
 import Bots from "../models/bot.model";
 import Chats from "../models/chat.model";
 import ChatMessages from "../models/chatMessage.model";
 import Courses from "../models/course.model";
 import User from "../models/user.model";
-import { prepareLLMChat } from "../services/chat.service";
+// OLD: Groq-based RAG approach (commented out)
+// import { prepareLLMChat } from "../services/chat.service";
 import { findUserById } from "../services/user.service";
 import Responder from "../utils/responder";
 
@@ -140,8 +141,59 @@ export const getChatController = async (req: Request, res: Response) => {
   }
 };
 
-// --- Initialize Gemini ---
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+// ────────────────────────────────────────────────────────────
+// Gemini + File Search Store Configuration
+// ────────────────────────────────────────────────────────────
+
+// Initialize the new @google/genai SDK for File Search support
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+
+// Map of bot/course names to their File Search Store names
+// Add more entries here as you create stores for other courses
+const FILE_SEARCH_STORE_MAP: Record<string, string> = {
+  "Maths-I": "fileSearchStores/maths1-store-0e9mplfcwwfr",
+  "PDSA": "fileSearchStores/pdsa-store-la0ns6d5zayf",
+};
+
+/**
+ * Creates a system prompt for the Gemini model.
+ * Unlike the old RAG approach, we do NOT inject context chunks here —
+ * the File Search tool handles retrieval automatically.
+ */
+const createGeminiSystemPrompt = (
+  botName: string,
+  botDescription: string,
+  courseTitle: string,
+  username: string
+): string => {
+  return `You are "${botName} bot", an expert AI Tutor for the subject "${courseTitle}" for the BS Degree in Data Science and Applications Programme by IIT Madras.
+
+Your Personality and Description:
+
+<DESCRIPTION>
+${botDescription}
+
+You are friendly, encouraging, and supportive.
+</DESCRIPTION>
+
+You are interacting with the student named ${username}.
+
+<Instructions>
+
+1. **Answering**: Your answers must be precise, accurate, and broken down into short, easy-to-understand steps. Use numbered lists or bullet points to explain complex topics.
+2. **Domain**: You must *only* answer questions related to your subject, "${botName}", and the IITM BS programme. Do not answer general knowledge questions, questions about other subjects, or personal opinions.
+3. **Context**: Use the File Search tool results to ground your answers in the course material. Prioritize information from the retrieved documents over your general knowledge.
+4. **Citation**: At the end of your answer, you MUST cite the source document your answer was based on. List them under a 'Sources:' heading.
+5. **Out-of-Domain Response**: If the user asks a question outside your domain, you must politely decline. You can be slightly humorous.
+
+</Instructions>
+
+### Example Out-of-Domain Responses ###:
+- That's an interesting question, ${username}! But my circuits are all wired for ${botName}.
+- Whoa, that's way outside my knowledge base! I'm just a humble bot for ${botName}. Can we get back to that?
+- Sorry, ${username}, that's not in my syllabus! Let's stick to ${botName}.
+`;
+};
 
 export const generateResponseController = async (
   req: Request,
@@ -208,7 +260,6 @@ export const generateResponseController = async (
     });
   }
 
-
   const { userMessage, botMessage } = req.body;
 
   if (!userMessage || !botMessage) {
@@ -232,8 +283,60 @@ export const generateResponseController = async (
       rating: 0,
     });
 
-    // Helper function we pass chatId , and well get an LLM Object loaded with full context
-    const stream = await prepareLLMChat(chat, userMessage.content , course.title);
+    // ────────────────────────────────────────────────────────
+    // NEW: Gemini + File Search Store approach
+    // ────────────────────────────────────────────────────────
+
+    // Build the system prompt (no manual RAG context injection needed)
+    const systemPrompt = createGeminiSystemPrompt(
+      bot.name,
+      bot.description,
+      course.title,
+      user.username
+    );
+
+    // Build conversation history in Gemini Content[] format
+    const conversationHistory: Content[] = (chat.messages || []).map((msg) => ({
+      role: msg.sender === "user" ? "user" : "model",
+      parts: [{ text: msg.content }],
+    }));
+
+    // Add the new user message
+    conversationHistory.push({
+      role: "user",
+      parts: [{ text: userMessage.content }],
+    });
+
+    // Determine which File Search Store to use based on the bot name
+    const fileSearchStoreName = FILE_SEARCH_STORE_MAP[bot.name];
+
+    // Build the tools array — include File Search if a store exists for this bot
+    const tools: any[] = [];
+    if (fileSearchStoreName) {
+      tools.push({
+        fileSearch: {
+          fileSearchStoreNames: [fileSearchStoreName],
+        },
+      });
+      console.log(
+        `📚 Using File Search Store: ${fileSearchStoreName} for bot: ${bot.name}`
+      );
+    } else {
+      console.log(
+        `⚠️ No File Search Store mapped for bot: ${bot.name}. Proceeding without RAG.`
+      );
+    }
+
+    // Call Gemini with streaming + File Search tool
+    const stream = await ai.models.generateContentStream({
+      model: "gemini-2.5-flash",
+      contents: conversationHistory,
+      config: {
+        systemInstruction: systemPrompt,
+        temperature: 0.5,
+        tools: tools.length > 0 ? tools : undefined,
+      },
+    });
 
     // Set headers for streaming
     res.setHeader("Content-Type", "text/plain");
@@ -242,10 +345,30 @@ export const generateResponseController = async (
     let fullBotResponse = ""; // Accumulate the full response
 
     for await (const chunk of stream) {
-      const chunkText = chunk.choices[0]?.delta?.content || "";
-      res.write(chunkText); // Send the chunk immediately to the client
-      fullBotResponse += chunkText; // Add to the full response
+      // Extract text from the Gemini response chunk
+      const chunkText = chunk.text || "";
+      if (chunkText) {
+        res.write(chunkText); // Send the chunk immediately to the client
+        fullBotResponse += chunkText; // Add to the full response
+      }
     }
+
+    // ────────────────────────────────────────────────────────
+    // OLD: Groq-based RAG approach (commented out)
+    // ────────────────────────────────────────────────────────
+    // const stream = await prepareLLMChat(chat, userMessage.content, course.title);
+    //
+    // res.setHeader("Content-Type", "text/plain");
+    // res.setHeader("Transfer-Encoding", "chunked");
+    //
+    // let fullBotResponse = "";
+    //
+    // for await (const chunk of stream) {
+    //   const chunkText = chunk.choices[0]?.delta?.content || "";
+    //   res.write(chunkText);
+    //   fullBotResponse += chunkText;
+    // }
+    // ────────────────────────────────────────────────────────
 
     // 6. Once streaming is done, end the response
     res.end();
