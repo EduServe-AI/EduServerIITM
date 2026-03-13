@@ -9,7 +9,7 @@ import Responder from "../utils/responder";
 
 export const featuredChatBotController = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     const featuredChatBots = await Bots.findAll({
@@ -20,7 +20,7 @@ export const featuredChatBotController = async (
     if (featuredChatBots.length === 0) {
       return Responder(res, {
         error: "No Featured ChatBots",
-        httpCode: 400,
+        httpCode: 404,
       });
     }
 
@@ -42,7 +42,7 @@ export const featuredChatBotController = async (
 /* ------------------- RECOMMENDED CHATBOTS ------------------- */
 export const recommendedChatBotController = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     const studentId = req.userId;
@@ -113,7 +113,7 @@ export const recommendedChatBotController = async (
 // -------------------- Making a chatbot Featured (temporary)-----------------------------------
 export const makeBotFeaturedController = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { botName } = req.body;
