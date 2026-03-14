@@ -56,6 +56,7 @@ export const instructorOnboardController = async (
       subjects,
       languages,
       bio,
+      about,
       githubUrl,
       linkedinUrl,
       availability,
@@ -71,6 +72,7 @@ export const instructorOnboardController = async (
         cgpa,
         level,
         bio,
+        about,
         githubUrl,
         linkedinUrl,
         basePrice: 100,
@@ -257,6 +259,7 @@ export const getInstructorDataController = async (
             "cgpa",
             "level",
             "bio",
+            "about",
             "githubUrl",
             "linkedinUrl",
             "basePrice",
@@ -352,6 +355,7 @@ export const updateInstructorDataController = async (
       email,
       level,
       bio,
+      about,
       basePrice,
       githubUrl,
       linkedinUrl,
@@ -385,6 +389,7 @@ export const updateInstructorDataController = async (
     // 2. Update InstructorProfile fields if provided
     if (
       bio !== undefined ||
+      about !== undefined ||
       basePrice !== undefined ||
       githubUrl !== undefined ||
       linkedinUrl !== undefined ||
@@ -591,6 +596,7 @@ export const getInstructorsController = async (req: Request, res: Response) => {
         "instructorId",
         "level",
         "bio",
+        "about",
         "basePrice",
         "githubUrl",
         "linkedinUrl",
