@@ -20,6 +20,7 @@ interface UserUpdatePayload {
 
 interface InstructorProfileUpdatePayload {
   bio?: string;
+  about?: string;
   basePrice?: Price;
   githubUrl?: string;
   linkedinUrl?: string;
@@ -123,6 +124,7 @@ export const updateInstructorProfileFields = async (
 ): Promise<{ success: boolean; error?: string }> => {
   const profileUpdates: Partial<{
     bio: string;
+    about: string;
     basePrice: Price;
     githubUrl: string;
     linkedinUrl: string;
@@ -134,6 +136,11 @@ export const updateInstructorProfileFields = async (
   // Process bio
   if (updates.bio !== undefined && updates.bio !== null) {
     profileUpdates.bio = updates.bio;
+  }
+
+  // Process about
+  if (updates.about !== undefined && updates.about !== null) {
+    profileUpdates.about = updates.about;
   }
 
   // Process basePrice with validation
