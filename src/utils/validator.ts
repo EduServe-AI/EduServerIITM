@@ -46,6 +46,7 @@ export const instructorOnboardSchema = z.object({
   languages: z.array(z.string()),
   profilePicture: z.string().nullable().optional(),
   bio: z.string().trim().min(50).max(500),
+  about: z.string().trim().min(50).max(500),
   githubUrl: z
     .string()
     .url("Please provide a valid GitHub URL.")
