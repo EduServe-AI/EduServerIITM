@@ -63,7 +63,7 @@ export const Embedder = async (content: string, type: "document" | "query") => {
       : TaskType.RETRIEVAL_QUERY;
 
   const embedder = new GoogleGenerativeAIEmbeddings({
-    model: "text-embedding-004", // 768 dimensions
+    model: "gemini-embedding-001", // 768 dimensions
     apiKey: process.env.GEMINI_API_KEY,
     taskType: taskType,
   });
