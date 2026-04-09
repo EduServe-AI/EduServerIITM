@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.routes";
 import chatRoutes from "./routes/chat.route";
 import chatBotRoutes from "./routes/chatbot.routes";
 import courseRoutes from "./routes/course.routes";
+import documentLinkRoutes from "./routes/documentLink.routes";
 import enrollmentRoutes from "./routes/enrollment.routes";
 import instructorRoutes from "./routes/instructor.routes";
 import levelRoutes from "./routes/level.routes";
@@ -79,6 +80,7 @@ app.use("/api/v1/bot", chatBotRoutes);
 app.use("/api/v1/student", studentRoutes);
 app.use("/api/v1/chat", chatRoutes);
 app.use("/api/v1/session", sessionRoutes);
+app.use("/api/v1/document-links", documentLinkRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("<h1>Eduserve Backend </h1>");

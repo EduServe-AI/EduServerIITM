@@ -1,15 +1,17 @@
+import { GoogleGenAI } from "@google/genai";
 import { TaskType } from "@google/generative-ai";
 import { AzureBlobStorageFileLoader } from "@langchain/community/document_loaders/web/azure_blob_storage_file";
-import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import config from "../config/constants";
 import Bots from "../models/bot.model";
 
+// Initializing the google genai client
+const googleGenAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+
 export const createSystemPrompt = async (
   botId: string,
-  courseTitle : string,
+  courseTitle: string,
   username: string,
   contextText: string,
-  sourcesString: string
 ) => {
   const bot = await Bots.findByPk(botId);
 
@@ -33,17 +35,13 @@ export const createSystemPrompt = async (
   - 1 . **Answering** : Your answers must be precise, accurate, and broken down into short, easy-to-understand steps. Use numbered lists or bullet points to explain complex topics.
   - 2. **Domain** : You must *only* answer questions related to your subject, "${bot.name}", and the IITM BS programme. Do not answer general knowledge questions, questions about other subjects, or personal opinions.
   - 3. **Context** : Use your answers on the provided context chunks below by considering relevant chunks . Reduce the usage of outside knowledge.
-  - 4. **Citation** : At the end of your answer, you MUST cite the source filename your answer was based on. List them under a 'Sources:' heading.
-  - 5. **Out-of-Domain Response:** If the user asks a question outside your domain, you must politely decline. You can be slightly humorous.
+  - 4. **Out-of-Domain Response:** If the user asks a question outside your domain, you must politely decline. You can be slightly humorous.
+  -5. **Tree-type-responses:** When showing folder/file tree structures, always wrap them in a fenced code block tagged with language-filetree or language-tree, like :tree
 
   </Instructions>
 
   \n### Context Chunks ### :
   ${contextText}
-
-  "\n### Available Source(s) for Citation ###",
-    // This tells the AI what filenames it is allowed to cite
-    ${sourcesString},
 
    
   \n### Example Out-of-Domain Responses ### :
@@ -56,39 +54,33 @@ export const createSystemPrompt = async (
   return prompt;
 };
 
-export const Embedder = async (content: string, type: "document" | "query") => {
+export const Embedder = async (
+  content: string,
+  type: "document" | "query",
+): Promise<number[]> => {
   const taskType =
     type === "document"
       ? TaskType.RETRIEVAL_DOCUMENT
       : TaskType.RETRIEVAL_QUERY;
 
-  const embedder = new GoogleGenerativeAIEmbeddings({
-    model: "gemini-embedding-001", // 768 dimensions
-    apiKey: process.env.GEMINI_API_KEY,
-    taskType: taskType,
+  const response = await googleGenAI.models.embedContent({
+    model: "gemini-embedding-001",
+    contents: content,
+    config: {
+      outputDimensionality: 768,
+      taskType: taskType,
+    },
   });
 
-  return embedder.embedQuery(content);
+  if (!response.embeddings) {
+    throw new Error("Failed to generate embeddings");
+  }
+  // Assuming response.embeddings is an array of numbers
+  return response.embeddings[0].values as number[];
 };
 
+
 export const documentLoader = async (courseName: string, blobName?: string) => {
-  // const loader = new AzureBlobStorageContainerLoader({
-  //   azureConfig: {
-  //     connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING!,
-  //     container: "slides",
-  //     prefix: `/${courseName}/`,
-  //   },
-  // unstructuredConfig: {
-  //   apiUrl:
-  //     config.nodeEnv === "development"
-  //       ? config.DOCKER_UNSTRUCTURED_URL
-  //       : config.PROD_UNSTRUCTURED_URL,
-  //   apiKey:
-  //     config.nodeEnv === "development" ? "" : config.PROD_UNSTRUCTURED_KEY,
-  //   strategy: "hi_res",
-  //   chunkingStrategy: "by_title",
-  //   skipHeadersAndFooters: true,
-  // } as any,
   const loader = new AzureBlobStorageFileLoader({
     azureConfig: {
       connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING!,
@@ -110,6 +102,7 @@ export const formatContext = async (
   contextChunks: {
     content: string;
     source_filename: string;
+    document_url: string | null;
   }[]
 ) => {
   const contextText = contextChunks
@@ -123,11 +116,30 @@ export const formatContext = async (
     )
     .join("\n");
 
-  // Extracting a unique list of source files
-  const sourceFiles = [
-    ...new Set(contextChunks.map((chunk) => chunk.source_filename)),
-  ];
-  const sourcesString = sourceFiles.join(", ");
+  // Extracting a unique list of source files with their URLs
+  const sourceMap = new Map<string, string | null>();
+  contextChunks.forEach((chunk) => {
+    // Only set if not already there, or update if this one has a URL
+    if (!sourceMap.has(chunk.source_filename) || chunk.document_url) {
+      sourceMap.set(chunk.source_filename, chunk.document_url);
+    }
+  });
 
-  return { contextText, sourcesString };
+  // Build sources string with URLs where available (for the LLM prompt)
+  const sourcesString = Array.from(sourceMap.entries())
+    .map(([filename, url]) => {
+      if (url) {
+        return `${filename} (URL: ${url})`;
+      }
+      return filename;
+    })
+    .join(", ");
+
+  // Build explicit source links array (for the JSON response to frontend)
+  const sourceLinks = Array.from(sourceMap.entries()).map(([filename, url]) => ({
+    filename,
+    url,
+  }));
+
+  return { contextText, sourcesString, sourceLinks };
 };

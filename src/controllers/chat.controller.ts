@@ -233,7 +233,9 @@ export const generateResponseController = async (
     });
 
     // Helper function we pass chatId , and well get an LLM Object loaded with full context
-    const stream = await prepareLLMChat(chat, userMessage.content , course.title);
+    const { stream, sourceLinks } = await prepareLLMChat(chat, userMessage.content, course.title);
+
+    console.log("source link", sourceLinks)
 
     // Set headers for streaming
     res.setHeader("Content-Type", "text/plain");
@@ -247,11 +249,17 @@ export const generateResponseController = async (
       fullBotResponse += chunkText; // Add to the full response
     }
 
-    // 6. Once streaming is done, end the response
+    // Send source links as a JSON block after the stream using a delimiter
+    // The frontend splits on this delimiter to extract the source metadata
+    const sourcesPayload = JSON.stringify({ sources: sourceLinks });
+    res.write(`\n___SOURCES_JSON___\n${sourcesPayload}`);
+
+    // Once streaming is done, end the response
     res.end();
 
-    //7 . Saving the full bot response to the database
+    // Saving the full bot response to the database
     if (fullBotResponse) {
+      console.log("full bot response")
       await ChatMessages.create({
         id: botMessage.id,
         botId: chat.botId,

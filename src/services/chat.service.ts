@@ -8,7 +8,12 @@ type Chat = import("../models/chat.model").default;
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-export const prepareLLMChat = async (chat: Chat, userMessage: string , courseTitle : string) => {
+export interface SourceLink {
+  filename: string;
+  url: string | null;
+}
+
+export const prepareLLMChat = async (chat: Chat, userMessage: string, courseTitle: string) => {
   if (!chat || !chat.bot) {
     throw new Error("Chat Id with bot info is required");
   }
@@ -40,17 +45,16 @@ export const prepareLLMChat = async (chat: Chat, userMessage: string , courseTit
   const contextChunks = await findSimilarChunks(userQueryEmbedding, courseId);
 
   const contextResult = await formatContext(contextChunks);
-  const { contextText, sourcesString } = contextResult;
+  const { contextText, sourceLinks } = contextResult;
 
   const systemPrompt = await createSystemPrompt(
     chat.botId,
     courseTitle,
     user.username!,
     contextText,
-    sourcesString
   );
 
-  return groq.chat.completions.create({
+  const stream = groq.chat.completions.create({
     model: "openai/gpt-oss-20b",
     temperature: 0.5,
     stream: true,
@@ -63,4 +67,6 @@ export const prepareLLMChat = async (chat: Chat, userMessage: string , courseTit
       { role: "user", content: userMessage },
     ],
   });
+
+  return { stream: await stream, sourceLinks };
 };
