@@ -259,7 +259,11 @@ export const generateResponseController = async (
 
     // Saving the full bot response to the database
     if (fullBotResponse) {
-      console.log("full bot response")
+      // Append the sources payload to the fullBotResponse so it is saved in the database
+      // This ensures when reloading the page, the frontend still discovers the sources.
+      fullBotResponse += `\n___SOURCES_JSON___\n${sourcesPayload}`;
+      
+      console.log("full bot response", fullBotResponse) 
       await ChatMessages.create({
         id: botMessage.id,
         botId: chat.botId,
