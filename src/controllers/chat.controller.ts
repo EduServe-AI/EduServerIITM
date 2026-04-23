@@ -301,35 +301,34 @@ export const generateResponseController = async (
 };
 
 export const getUserChatsController = async (req: Request, res: Response) => {
-  // Checking the user
-  const user = await User.findByPk(req.userId, {
-    include: [
-      {
-        model: Chats,
-        as: "chats",
-        attributes: [
-          "id",
-          "botId",
-          "botName",
-          "title",
-          "lastInteractionTime",
-          "createdAt",
-        ],
-        order: [["lastInteractionTime", "DESC"]],
-        limit: 7,
-      },
-    ],
-  });
-
-  if (!user || !user.username) {
-    return Responder(res, {
-      message: "User not found",
-      httpCode: 404,
-    });
-  }
-
   try {
-    const userChats = user.chats?.sort();
+    // 1. Validate the user exists (only fetch the needed fields to save memory)
+    const user = await User.findByPk(req.userId, {
+      attributes: ["id", "username"],
+    });
+
+    if (!user || !user.username) {
+      return Responder(res, {
+        message: "User not found",
+        httpCode: 404,
+      });
+    }
+
+    // 2. Fetch chats directly from the Chats model
+    // This generates a much cheaper and faster SQL query
+    const userChats = await Chats.findAll({
+      where: { userId: req.userId },
+      attributes: [
+        "id",
+        "botId",
+        "botName",
+        "title",
+        "lastInteractionTime",
+        "createdAt",
+      ],
+      order: [["lastInteractionTime", "DESC"]],
+      limit: 7,
+    });
 
     if (!userChats || userChats.length === 0) {
       return Responder(res, {
@@ -339,7 +338,7 @@ export const getUserChatsController = async (req: Request, res: Response) => {
     }
 
     return Responder(res, {
-      message: "User Chats Retreived successfully",
+      message: "User Chats Retrieved successfully",
       data: {
         chats: userChats,
       },

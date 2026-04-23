@@ -15,14 +15,14 @@ import AvailabilityTimeSlot from "../models/timeSlot.model";
 import UserLanguage from "../models/userLanguage.model";
 import { getCourseId } from "../services/course.service";
 import {
-  getInstructorAvailabilites,
-  getInstructorLanguages,
-  getInstructorSkills,
-  updateInstructorAvailabilities,
-  updateInstructorProfileFields,
-  updateInstructorSkills,
-  updateUserFields,
-  updateUserLanguages,
+    getInstructorAvailabilites,
+    getInstructorLanguages,
+    getInstructorSkills,
+    updateInstructorAvailabilities,
+    updateInstructorProfileFields,
+    updateInstructorSkills,
+    updateUserFields,
+    updateUserLanguages,
 } from "../services/instructor.service";
 import { getLanguageId } from "../services/language.service";
 import { OnboardingSchemaType } from "../utils/validator";
@@ -502,12 +502,12 @@ export const updateInstructorDataController = async (
   }
 };
 
-// Searching and filtering based on course names
+// Searching and filtering based on course names and instructor names
 export const getInstructorsController = async (req: Request, res: Response) => {
   try {
     // Extracting query params
-    const search = (req.query.search as string) || ""; // searching CT or Computational..
-    const level = (req.query.level as string) || "all"; // filtering based on level....
+    const search = ((req.query.search as string) || "").trim(); // searching by name or course
+    const level = (req.query.level as string) || "all"; // filtering based on level
 
     const whereCondition: WhereOptions = {};
 
@@ -518,8 +518,9 @@ export const getInstructorsController = async (req: Request, res: Response) => {
 
     let instructorIds: string[] = [];
 
-    // If search term is provided, first find instructor IDs that have matching skills/courses
-    if (search && search.trim().length > 0) {
+    // If search term is provided, find instructor IDs matching either courses/skills OR usernames
+    if (search && search.length > 0) {
+      // 1. Search by courses / skills
       const matchingSkills = await Skill.findAll({
         attributes: ["instructorProfileId"],
         include: [
@@ -547,15 +548,35 @@ export const getInstructorsController = async (req: Request, res: Response) => {
         raw: true,
       });
 
-      // Extract unique instructor profile IDs
-      instructorIds = [
-        ...new Set(matchingSkills.map((skill) => skill.instructorProfileId)),
-      ];
+      const skillInstructorIds = matchingSkills.map((skill) => skill.instructorProfileId);
+
+      // 2. Search by Instructor Name (Username)
+      const matchingUsers = await InstructorProfiles.findAll({
+        attributes: ["id"],
+        include: [
+          {
+            model: User,
+            as: "user",
+            required: true,
+            attributes: ["id"],
+            where: {
+              username: { [Op.iLike]: `%${search}%` },
+            },
+          },
+        ],
+      });
+
+      const userInstructorIds = matchingUsers.map((profile) => profile.id);
+
+      // Combine matching IDs and remove duplicates
+      instructorIds = [...new Set([...skillInstructorIds, ...userInstructorIds])];
 
       if (instructorIds.length === 0) {
+        // Returning 200 instead of 404 with empty array to prevent React Query undefined data errors
         return Responder(res, {
           message: "No instructors found matching your criteria",
-          httpCode: 404,
+          httpCode: 200, 
+          data: { instructors: [] },
         });
       }
 
@@ -607,7 +628,7 @@ export const getInstructorsController = async (req: Request, res: Response) => {
 
     if (instructors.length === 0) {
       return Responder(res, {
-        message: "Instructors retrieved successfully",
+        message: "No instructors found",
         httpCode: 200,
         data: { instructors: [] },
       });

@@ -1,6 +1,6 @@
+import { Association, DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db.config";
 import { ChatAttributes } from "./types";
-import { DataTypes, Model, Optional, Association } from "sequelize";
 
 // Type imports to avoid circular dependencies
 type Bot = import("./bot.model").default;
@@ -88,7 +88,7 @@ Chats.init(
         fields: ["botId"],
       },
       {
-        fields: ["userId"],
+        fields: ["userId", "lastInteractionTime"],
       },
     ],
   }
