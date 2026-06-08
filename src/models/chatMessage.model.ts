@@ -9,7 +9,7 @@ type User = import("./user.model").default;
 type Chat = import("./chat.model").default;
 
 interface ChatCreationAttributes
-  extends Optional<ChatMessagesAttributes, "id" | "isDeleted"> {}
+  extends Optional<ChatMessagesAttributes, "id" | "isDeleted" | "sources"> {}
 
 class ChatMessages
   extends Model<ChatMessagesAttributes, ChatCreationAttributes>
@@ -20,6 +20,7 @@ class ChatMessages
   public chatId!: string;
   public isDeleted?: boolean | undefined;
   public content!: string;
+  public sources?: object[] | null;
   public rating!: number;
   public sender!: "bot" | "user";
   public userId!: string;
@@ -72,6 +73,11 @@ ChatMessages.init(
     content: {
       type: DataTypes.TEXT,
       allowNull: false,
+    },
+    sources: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: null,
     },
     sender: {
       type: DataTypes.ENUM("bot", "user"),

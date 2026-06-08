@@ -82,12 +82,16 @@ Chats.init(
     tableName: "chats",
     indexes: [
       {
+        name: "chats_botId_id_idx",
         fields: ["botId", "id"],
       },
       {
+        name: "chats_botId_idx",
         fields: ["botId"],
       },
       {
+        // Must match the migration name in 20260423111800-update-user-chats-index.js
+        name: "chats_userId_lastInteractionTime_idx",
         fields: ["userId", "lastInteractionTime"],
       },
     ],

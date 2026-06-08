@@ -79,6 +79,7 @@ export interface ChatMessagesAttributes {
   botId: string;
   chatId: string;
   content: string;
+  sources?: object[] | null;
   sender: "bot" | "user";
   rating: number;
   userId: string;

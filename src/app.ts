@@ -1,6 +1,6 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import morgan from "morgan";
 import passport from "./config/passport.config";
 import authRoutes from "./routes/auth.routes";
@@ -14,8 +14,13 @@ import levelRoutes from "./routes/level.routes";
 import sessionRoutes from "./routes/session.routes";
 import studentRoutes from "./routes/student.routes";
 import userRoutes from "./routes/user.routes";
+import { initializeDatabase } from "./utils/bootstrap";
 
 const app = express();
+
+// Start DB initialization eagerly at module load.
+// The middleware below will block requests until it completes.
+const initPromise = initializeDatabase();
 
 // Handling Cors
 app.use(
@@ -62,8 +67,10 @@ app.use(
   })
 );
 
-// Handle preflight requests explicitly
-app.options("{*path}", cors());
+// Block requests until DB initialization is complete (near-zero overhead after first resolve)
+app.use((req: Request, res: Response, next: NextFunction) => {
+  initPromise.then(() => next()).catch(next);
+});
 
 app.use(express.json());
 app.use(cookieParser());
