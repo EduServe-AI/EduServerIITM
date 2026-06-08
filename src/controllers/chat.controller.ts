@@ -124,28 +124,37 @@ export const getChatController = async (req: Request, res: Response) => {
       title: chat.title,
     };
 
-    // 4. Clean up messages: strip legacy ___SOURCES_JSON___ from content
-    //    and return sources from either the dedicated column or parsed from content
+    // 4. Clean up messages: strip ___SOURCES_JSON___ from content
+    //    and return sources as `sourceLinks` (matching the frontend interface)
     const SOURCES_DELIMITER = "\n___SOURCES_JSON___\n";
     const cleanedMessages = (chat.messages || []).map((msg) => {
       const plain = msg.toJSON();
-      if (plain.sources) {
-        // Sources already stored in the dedicated column
-        return plain;
-      }
-      // Handle legacy messages that have sources embedded in content
+
+      // Always strip the ___SOURCES_JSON___ block from content so the
+      // raw JSON is never shown to the user, regardless of whether
+      // sources also live in the dedicated JSONB column.
       const delimIdx = plain.content.indexOf(SOURCES_DELIMITER);
       if (delimIdx !== -1) {
         const rawJson = plain.content.slice(delimIdx + SOURCES_DELIMITER.length);
         plain.content = plain.content.slice(0, delimIdx);
-        try {
-          const parsed = JSON.parse(rawJson);
-          plain.sources = parsed.sources || null;
-        } catch {
-          plain.sources = null;
+
+        // If the dedicated `sources` column is empty, recover from content
+        if (!plain.sources) {
+          try {
+            const parsed = JSON.parse(rawJson);
+            plain.sources = parsed.sources || null;
+          } catch {
+            plain.sources = null;
+          }
         }
       }
-      return plain;
+
+      // Rename `sources` → `sourceLinks` to match the frontend chatMessage interface
+      const { sources, ...rest } = plain;
+      return {
+        ...rest,
+        sourceLinks: sources || null,
+      };
     });
 
     return Responder(res, {
@@ -284,12 +293,24 @@ export const generateResponseController = async (
 
     // Saving the full bot response to the database
     if (fullBotResponse) {
+      const hasSources = sourceLinks && sourceLinks.length > 0;
+
+      // Build the content to persist. We embed sources inside the content
+      // using the ___SOURCES_JSON___ delimiter so that getChatController's
+      // fallback parser can always recover them on reload – even if the
+      // dedicated `sources` JSONB column does not exist in the DB yet.
+      let contentToSave = fullBotResponse;
+      if (hasSources) {
+        const sourcesPayloadForDb = JSON.stringify({ sources: sourceLinks });
+        contentToSave += `\n___SOURCES_JSON___\n${sourcesPayloadForDb}`;
+      }
+
       await ChatMessages.create({
         id: botMessage.id,
         botId: chat.botId,
         sender: "bot",
-        content: fullBotResponse,
-        sources: sourceLinks && sourceLinks.length > 0 ? sourceLinks : null,
+        content: contentToSave,
+        sources: hasSources ? sourceLinks : null,
         userId: user.id,
         chatId: chat.id,
         username: user.username,
