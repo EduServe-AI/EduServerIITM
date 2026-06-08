@@ -38,7 +38,7 @@ app.use(
       }
 
       // Allow ngrok URLs for testing
-      if (origin.match(/https:\/\/.*\.ngrok-free\.app$/)) {
+      if (origin.match(/https:\/\/.*\.ngrok-free\.(app|dev)$/)) {
         return callback(null, true);
       }
 
@@ -55,6 +55,7 @@ app.use(
       "Origin",
       "Cookie",
       "Set-Cookie",
+      "ngrok-skip-browser-warning",
     ],
     exposedHeaders: ["Set-Cookie"],
     maxAge: 86400, // 24 hours
@@ -62,7 +63,7 @@ app.use(
 );
 
 // Handle preflight requests explicitly
-app.options("*path", cors());
+app.options("{*path}", cors());
 
 app.use(express.json());
 app.use(cookieParser());
