@@ -4,6 +4,7 @@ import Chats from "./chat.model";
 import ChatMessages from "./chatMessage.model";
 import Course from "./course.model";
 import DayOfWeek from "./dayofWeek";
+import DocumentLink from "./documentLink.model";
 import Enrollment from "./enrollment.model";
 import InstructorProfiles from "./instructor.model";
 import Language from "./language.model";
@@ -332,6 +333,19 @@ export const setUpAssociations = () => {
 
   Session.belongsTo(User, { foreignKey: "studentId", as: "student" });
   Session.belongsTo(User, { foreignKey: "instructorId", as: "instructor" });
+
+  // ----------------------- Document Links for Source File URLs -----------------
+  Course.hasMany(DocumentLink, {
+    foreignKey: "courseId",
+    as: "documentLinks",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  DocumentLink.belongsTo(Course, {
+    foreignKey: "courseId",
+    as: "course",
+  });
 
   console.log("Associations set up successfully!");
 };

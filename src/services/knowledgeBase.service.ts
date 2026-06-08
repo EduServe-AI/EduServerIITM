@@ -49,15 +49,19 @@ const INSERT_CHUNK = `
      )
 `;
 
-// SQL Query to retreive the chunk from the knowledgeBase
-const RETREIVE_CHUNK = `
-
-      SELECT content , source_filename
-      FROM "knowledgeBase"
-      WHERE "course_id" = :courseId
-      ORDER BY "embedding" <=> :embedding
+// SQL Query to retrieve chunks from knowledgeBase with LEFT JOIN on document_links
+const RETRIEVE_CHUNK = `
+      SELECT 
+        kb.content,
+        kb.source_filename,
+        dl."documentUrl" AS document_url
+      FROM "knowledgeBase" kb
+      LEFT JOIN "document_links" dl
+        ON dl."courseId" = kb."course_id"
+        AND dl."sourceFilename" = kb."source_filename"
+      WHERE kb."course_id" = :courseId
+      ORDER BY kb."embedding" <=> :embedding
       LIMIT :limit
-
 `;
 
 export const initializeKnowledgeBase = async () => {
@@ -81,7 +85,7 @@ export const countKnowledgeBaseRows = async () => {
   } catch (error: any) {
     console.error(
       "❌ Error in counting rows of  knowledge_base table: ",
-      error,
+      error
     );
     throw new Error(error);
   }
@@ -127,7 +131,7 @@ export const insertKnowledgeChunk = async (chunk: chunkType) => {
   } catch (error: any) {
     console.error(
       "❌ Error in inserting chunks into knowledge_base table: ",
-      error,
+      error
     );
     throw new Error(error);
   }
@@ -136,13 +140,13 @@ export const insertKnowledgeChunk = async (chunk: chunkType) => {
 export const findSimilarChunks = async (
   embedding: number[],
   courseId: string,
-  limit: number = 5,
+  limit: number = 3
 ) => {
   // Formatting the embedding vector for a raw sql query
   const embeddingSql = pgvector.toSql(embedding);
 
   try {
-    const results = await sequelize.query(RETREIVE_CHUNK, {
+    const results = await sequelize.query(RETRIEVE_CHUNK, {
       replacements: {
         courseId: courseId,
         embedding: embeddingSql,
@@ -151,9 +155,11 @@ export const findSimilarChunks = async (
       type: QueryTypes.SELECT,
     });
 
-    console.log("retreived chunks", results);
-
-    return results as { content: string; source_filename: string }[];
+    return results as {
+      content: string;
+      source_filename: string;
+      document_url: string | null;
+    }[];
   } catch (error: any) {
     console.error("❌ Error in retreiving chunks from knowledge_base ", error);
     throw new Error(error);

@@ -4,6 +4,7 @@ import Chats from "./chat.model";
 import ChatMessages from "./chatMessage.model";
 import Course from "./course.model";
 import DayOfWeek from "./dayofWeek";
+import DocumentLink from "./documentLink.model";
 import Enrollment from "./enrollment.model";
 import InstructorProfiles from "./instructor.model";
 import Language from "./language.model";
@@ -38,6 +39,7 @@ export const syncModels = async () => {
   await ChatMessages.sync(syncOptions);
   // await KnowledgeBase.sync(syncOptions);
   await Session.sync(syncOptions);
+  await DocumentLink.sync(syncOptions);
 
   await initializeKnowledgeBase();
 };

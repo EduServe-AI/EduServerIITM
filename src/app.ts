@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.routes";
 import chatRoutes from "./routes/chat.route";
 import chatBotRoutes from "./routes/chatbot.routes";
 import courseRoutes from "./routes/course.routes";
+import documentLinkRoutes from "./routes/documentLink.routes";
 import enrollmentRoutes from "./routes/enrollment.routes";
 import instructorRoutes from "./routes/instructor.routes";
 import levelRoutes from "./routes/level.routes";
@@ -17,19 +18,9 @@ import { initializeDatabase } from "./utils/bootstrap";
 
 const app = express();
 
-// Database initialization middleware
-app.use(async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    await initializeDatabase();
-    next();
-  } catch (error) {
-    console.error("Failed to initialize database:", error);
-    res.status(500).json({ 
-        error: "Internal Server Error", 
-        message: "Database initialization failed" 
-    });
-  }
-});
+// Start DB initialization eagerly at module load.
+// The middleware below will block requests until it completes.
+const initPromise = initializeDatabase();
 
 // Handling Cors
 app.use(
@@ -52,7 +43,7 @@ app.use(
       }
 
       // Allow ngrok URLs for testing
-      if (origin.match(/https:\/\/.*\.ngrok-free\.app$/)) {
+      if (origin.match(/https:\/\/.*\.ngrok-free\.(app|dev)$/)) {
         return callback(null, true);
       }
 
@@ -69,14 +60,17 @@ app.use(
       "Origin",
       "Cookie",
       "Set-Cookie",
+      "ngrok-skip-browser-warning",
     ],
     exposedHeaders: ["Set-Cookie"],
     maxAge: 86400, // 24 hours
   })
 );
 
-// Handle preflight requests explicitly
-app.options("*path", cors());
+// Block requests until DB initialization is complete (near-zero overhead after first resolve)
+app.use((req: Request, res: Response, next: NextFunction) => {
+  initPromise.then(() => next()).catch(next);
+});
 
 app.use(express.json());
 app.use(cookieParser());
@@ -94,6 +88,7 @@ app.use("/api/v1/bot", chatBotRoutes);
 app.use("/api/v1/student", studentRoutes);
 app.use("/api/v1/chat", chatRoutes);
 app.use("/api/v1/session", sessionRoutes);
+app.use("/api/v1/document-links", documentLinkRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("<h1>Eduserve Backend </h1>");

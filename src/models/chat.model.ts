@@ -1,6 +1,6 @@
+import { Association, DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db.config";
 import { ChatAttributes } from "./types";
-import { DataTypes, Model, Optional, Association } from "sequelize";
 
 // Type imports to avoid circular dependencies
 type Bot = import("./bot.model").default;
@@ -82,13 +82,17 @@ Chats.init(
     tableName: "chats",
     indexes: [
       {
+        name: "chats_botId_id_idx",
         fields: ["botId", "id"],
       },
       {
+        name: "chats_botId_idx",
         fields: ["botId"],
       },
       {
-        fields: ["userId"],
+        // Must match the migration name in 20260423111800-update-user-chats-index.js
+        name: "chats_userId_lastInteractionTime_idx",
+        fields: ["userId", "lastInteractionTime"],
       },
     ],
   }

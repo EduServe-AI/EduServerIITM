@@ -91,6 +91,7 @@ export const getChatController = async (req: Request, res: Response) => {
           attributes: [
             "id",
             "content",
+            "sources",
             "username",
             "sender",
             "rating",
@@ -123,11 +124,35 @@ export const getChatController = async (req: Request, res: Response) => {
       title: chat.title,
     };
 
+    // 4. Clean up messages: strip legacy ___SOURCES_JSON___ from content
+    //    and return sources from either the dedicated column or parsed from content
+    const SOURCES_DELIMITER = "\n___SOURCES_JSON___\n";
+    const cleanedMessages = (chat.messages || []).map((msg) => {
+      const plain = msg.toJSON();
+      if (plain.sources) {
+        // Sources already stored in the dedicated column
+        return plain;
+      }
+      // Handle legacy messages that have sources embedded in content
+      const delimIdx = plain.content.indexOf(SOURCES_DELIMITER);
+      if (delimIdx !== -1) {
+        const rawJson = plain.content.slice(delimIdx + SOURCES_DELIMITER.length);
+        plain.content = plain.content.slice(0, delimIdx);
+        try {
+          const parsed = JSON.parse(rawJson);
+          plain.sources = parsed.sources || null;
+        } catch {
+          plain.sources = null;
+        }
+      }
+      return plain;
+    });
+
     return Responder(res, {
       message: "Chat Session Retreievs Successfully",
       data: {
         chat: chatDetails,
-        messages: chat.messages,
+        messages: cleanedMessages,
       },
     });
   } catch (error) {
@@ -145,7 +170,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export const generateResponseController = async (
   req: Request,
-  res: Response,
+  res: Response
 ) => {
   // Checking the user
   const user = await findUserById(req.userId!);
@@ -208,6 +233,7 @@ export const generateResponseController = async (
     });
   }
 
+
   const { userMessage, botMessage } = req.body;
 
   if (!userMessage || !botMessage) {
@@ -232,11 +258,9 @@ export const generateResponseController = async (
     });
 
     // Helper function we pass chatId , and well get an LLM Object loaded with full context
-    const stream = await prepareLLMChat(
-      chat,
-      userMessage.content,
-      course.title,
-    );
+    const { stream, sourceLinks } = await prepareLLMChat(chat, userMessage.content, course.title);
+
+    console.log("source link", sourceLinks)
 
     // Set headers for streaming
     res.setHeader("Content-Type", "text/plain");
@@ -250,16 +274,22 @@ export const generateResponseController = async (
       fullBotResponse += chunkText; // Add to the full response
     }
 
-    // 6. Once streaming is done, end the response
+    // Send source links as a JSON block after the stream using a delimiter
+    // The frontend splits on this delimiter to extract the source metadata
+    const sourcesPayload = JSON.stringify({ sources: sourceLinks });
+    res.write(`\n___SOURCES_JSON___\n${sourcesPayload}`);
+
+    // Once streaming is done, end the response
     res.end();
 
-    //7 . Saving the full bot response to the database
+    // Saving the full bot response to the database
     if (fullBotResponse) {
       await ChatMessages.create({
         id: botMessage.id,
         botId: chat.botId,
         sender: "bot",
         content: fullBotResponse,
+        sources: sourceLinks && sourceLinks.length > 0 ? sourceLinks : null,
         userId: user.id,
         chatId: chat.id,
         username: user.username,
@@ -292,38 +322,44 @@ export const generateResponseController = async (
 };
 
 export const getUserChatsController = async (req: Request, res: Response) => {
-  // Checking the user
-  const user = await User.findByPk(req.userId, {
-    include: [
-      {
-        model: Chats,
-        as: "chats",
-        attributes: [
-          "id",
-          "botId",
-          "botName",
-          "title",
-          "lastInteractionTime",
-          "createdAt",
-        ],
-        order: [["lastInteractionTime", "DESC"]],
-        limit: 7,
-      },
-    ],
-  });
-
-  if (!user || !user.username) {
-    return Responder(res, {
-      message: "User not found",
-      httpCode: 404,
-    });
-  }
-
   try {
-    const userChats = user.chats?.sort();
+    // 1. Validate the user exists (only fetch the needed fields to save memory)
+    const user = await User.findByPk(req.userId, {
+      attributes: ["id", "username"],
+    });
+
+    if (!user || !user.username) {
+      return Responder(res, {
+        message: "User not found",
+        httpCode: 404,
+      });
+    }
+
+    // 2. Fetch chats directly from the Chats model
+    // This generates a much cheaper and faster SQL query
+    const userChats = await Chats.findAll({
+      where: { userId: req.userId },
+      attributes: [
+        "id",
+        "botId",
+        "botName",
+        "title",
+        "lastInteractionTime",
+        "createdAt",
+      ],
+      order: [["lastInteractionTime", "DESC"]],
+      limit: 7,
+    });
+
+    if (!userChats || userChats.length === 0) {
+      return Responder(res, {
+        message: "User has no chats",
+        httpCode: 404,
+      });
+    }
 
     return Responder(res, {
-      message: "User Chats Retreived successfully",
+      message: "User Chats Retrieved successfully",
       data: {
         chats: userChats,
       },
