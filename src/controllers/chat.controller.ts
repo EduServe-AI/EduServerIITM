@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Request, Response } from "express";
+import sequelize from "../config/db.config";
 import Bots from "../models/bot.model";
 import Chats from "../models/chat.model";
 import ChatMessages from "../models/chatMessage.model";
@@ -359,7 +360,7 @@ export const getUserChatsController = async (req: Request, res: Response) => {
     // 2. Fetch chats directly from the Chats model
     // This generates a much cheaper and faster SQL query
     const userChats = await Chats.findAll({
-      where: { userId: req.userId },
+      where: { userId: req.userId , isDeleted : false},
       attributes: [
         "id",
         "botId",
@@ -368,7 +369,16 @@ export const getUserChatsController = async (req: Request, res: Response) => {
         "lastInteractionTime",
         "createdAt",
       ],
-      order: [["lastInteractionTime", "DESC"]],
+      order: [
+        [
+          sequelize.fn(
+            "COALESCE",
+            sequelize.col("lastInteractionTime"),
+            sequelize.col("createdAt")
+          ),
+          "DESC",
+        ],
+      ],
       limit: 7,
     });
 
@@ -379,10 +389,18 @@ export const getUserChatsController = async (req: Request, res: Response) => {
       });
     }
 
+    const chatsWithInteractionTime = userChats.map((chat) => {
+      const plain = chat.toJSON() as any;
+      return {
+        ...plain,
+        lastInteractionTime: plain.lastInteractionTime || plain.createdAt,
+      };
+    });
+
     return Responder(res, {
       message: "User Chats Retrieved successfully",
       data: {
-        chats: userChats,
+        chats: chatsWithInteractionTime,
       },
     });
   } catch (error) {
@@ -394,3 +412,47 @@ export const getUserChatsController = async (req: Request, res: Response) => {
     });
   }
 };
+
+
+export const deleteChatController = async (req : Request , res : Response) => {
+  try {
+
+    // Retreiving the chatId from the params
+    const { chatId } = req.params;
+    console.log("chatId", chatId);
+    if (!chatId) {
+      return Responder(res, { error: "Chat ID is required for deleting", httpCode: 404 });
+    } 
+
+
+    const chat = await Chats.findByPk(chatId)
+
+    if (!chat){
+      return Responder(res , {
+        error : "Chat With given Id not found" , httpCode : 404
+      })
+    }
+
+    // First we need to mark the chat as deleted 
+    chat.isDeleted = true;
+    await chat.save(); 
+
+
+    // Later we need to run a scheduler to soft delete chat messages 
+
+    return Responder(res , {
+      message : "Chat Deleted successfully", 
+      httpCode : 200
+    })
+
+    
+  } catch (error) {
+    console.error(error);
+    return Responder(res , {
+      error : "INTERNAL SERVER ERROR",
+      message : "An unexpected error occurred on the server.",
+      httpCode : 500
+    })
+    
+  }
+}
