@@ -3,55 +3,87 @@ import { TaskType } from "@google/generative-ai";
 import { AzureBlobStorageFileLoader } from "@langchain/community/document_loaders/web/azure_blob_storage_file";
 import config from "../config/constants";
 import Bots from "../models/bot.model";
+import { MessageIntent } from "../types/message";
 
 // Initializing the google genai client
 const googleGenAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
-export const createSystemPrompt = async (
+/**
+ * Creates the STATIC system prompt — identical every turn for the same
+ * (bot, course, user) triple, so the LLM provider can cache it.
+ *
+ * ✅ Cache-optimal ordering:
+ *   1. Role definition        — static
+ *   2. Course / bot identity  — static
+ *   3. Username               — static
+ *   4. Formatting / domain rules — static
+ *
+ * Dynamic content (RAG context chunks) is intentionally NOT included here.
+ * It is injected into the final user message via `buildDynamicUserTurn`.
+ */
+export const createStaticSystemPrompt = async (
   botId: string,
   courseTitle: string,
   username: string,
-  contextText: string,
-) => {
+  intent?: MessageIntent
+): Promise<string> => {
   const bot = await Bots.findByPk(botId);
 
   if (!bot) throw new Error("Bot Not Found brother");
 
-  let prompt = ` You are "${bot.name} bot " , an expert AI Tutor at the subject ${courseTitle} for the  BS Degree in Data Science and Applications Programme by IIT Madras . 
+  // Lightweight prompt for greetings — no RAG instructions needed
+  if (intent && intent !== "subject_query") {
+    return `You are a friendly AI tutor for ${courseTitle} on Eduserve AI.
+The student's name is ${username}.
+Respond naturally and warmly to their message.
+Keep your response brief and conversational.
+Do not bring up course content unless the student asks.`;
+  }
 
-  Your Personality and Description :
+  // Full subject-query prompt — static parts only
+  return `You are "${bot.name} bot", an expert AI Tutor for the subject "${courseTitle}" in the BS Degree in Data Science and Applications Programme by IIT Madras.
 
-  <DESCRIPTION>
-  \n${bot.description}
+Your Personality and Description:
+<DESCRIPTION>
+${bot.description}
 
-  You are friendly , encouraging , 
-  </DESCRIPTION>
+You are friendly and encouraging.
+</DESCRIPTION>
 
-  You are interacting with the student named ${username}
+You are interacting with the student named ${username}.
 
+<Instructions>
+- 1. **Answering**: Your answers must be precise, accurate, and broken down into short, easy-to-understand steps. Use numbered lists or bullet points to explain complex topics.
+- 2. **Domain**: You must *only* answer questions related to your subject, "${bot.name}", and the IITM BS programme. Do not answer general knowledge questions, questions about other subjects, or personal opinions.
+- 3. **Context**: Base your answers on the context chunks provided in each user message. Reduce the usage of outside knowledge.
+- 4. **Out-of-Domain Response**: If the user asks a question outside your domain, politely decline. You can be slightly humorous.
+- 5. **Tree-type-responses**: When showing folder/file tree structures, always wrap them in a fenced code block tagged with language-filetree or language-tree.
+</Instructions>
 
-  <Instructions>
+### Example Out-of-Domain Responses ###
+- That's an interesting question, ${username}! But my circuits are all wired for ${bot.name}.
+- Whoa, that's way outside my knowledge base! I'm just a humble bot for ${bot.name}. Can we get back to that?
+- Sorry, ${username}, that's not in my syllabus! Let's stick to ${bot.name}.`;
+};
 
-  - 1 . **Answering** : Your answers must be precise, accurate, and broken down into short, easy-to-understand steps. Use numbered lists or bullet points to explain complex topics.
-  - 2. **Domain** : You must *only* answer questions related to your subject, "${bot.name}", and the IITM BS programme. Do not answer general knowledge questions, questions about other subjects, or personal opinions.
-  - 3. **Context** : Use your answers on the provided context chunks below by considering relevant chunks . Reduce the usage of outside knowledge.
-  - 4. **Out-of-Domain Response:** If the user asks a question outside your domain, you must politely decline. You can be slightly humorous.
-  -5. **Tree-type-responses:** When showing folder/file tree structures, always wrap them in a fenced code block tagged with language-filetree or language-tree, like :tree
+/**
+ * Builds the final user-turn content.
+ *
+ * For subject queries the DYNAMIC context chunks are prepended here —
+ * this keeps the system prompt (and all prior history) as a stable,
+ * cacheable prefix.  Only this last message changes every turn.
+ */
+export const buildDynamicUserTurn = (
+  userMessage: string,
+  contextText?: string
+): string => {
+  if (!contextText) return userMessage;
 
-  </Instructions>
+  return `### Relevant Context Chunks ###
+${contextText}
 
-  \n### Context Chunks ### :
-  ${contextText}
-
-   
-  \n### Example Out-of-Domain Responses ### :
-   - That's an interesting question, ${username}! But my circuits are all wired for ${bot.name}.
-   - Whoa, that's way outside my knowledge base! I'm just a humble bot for ${bot.name}. Can we get back to that?
-   - Sorry, ${username}, that's not in my syllabus! Let's stick to ${bot.name}.
-
-  `;
-
-  return prompt;
+### Student Question ###
+${userMessage}`;
 };
 
 export const Embedder = async (
