@@ -49,17 +49,24 @@ const INSERT_CHUNK = `
      )
 `;
 
+// Cosine distance threshold — chunks with distance >= this value are too
+// dissimilar to be useful and are excluded. 0.65 means ≤ 35% similarity.
+const SIMILARITY_THRESHOLD = 0.65;
+
 // SQL Query to retrieve chunks from knowledgeBase with LEFT JOIN on document_links
+// Only returns chunks whose cosine distance is below the threshold (i.e. actually relevant).
 const RETRIEVE_CHUNK = `
       SELECT 
         kb.content,
         kb.source_filename,
-        dl."documentUrl" AS document_url
+        dl."documentUrl" AS document_url,
+        (kb."embedding" <=> :embedding) AS similarity_score
       FROM "knowledgeBase" kb
       LEFT JOIN "document_links" dl
         ON dl."courseId" = kb."course_id"
         AND dl."sourceFilename" = kb."source_filename"
       WHERE kb."course_id" = :courseId
+        AND (kb."embedding" <=> :embedding) < :threshold
       ORDER BY kb."embedding" <=> :embedding
       LIMIT :limit
 `;
@@ -140,7 +147,7 @@ export const insertKnowledgeChunk = async (chunk: chunkType) => {
 export const findSimilarChunks = async (
   embedding: number[],
   courseId: string,
-  limit: number = 5
+  limit: number = 10
 ) => {
   // Formatting the embedding vector for a raw sql query
   const embeddingSql = pgvector.toSql(embedding);
@@ -151,15 +158,27 @@ export const findSimilarChunks = async (
         courseId: courseId,
         embedding: embeddingSql,
         limit: limit,
+        threshold: SIMILARITY_THRESHOLD,
       },
       type: QueryTypes.SELECT,
     });
 
-    return results as {
+    const chunks = results as {
       content: string;
       source_filename: string;
       document_url: string | null;
+      similarity_score: number;
     }[];
+
+    // Log retrieval stats for observability
+    if (chunks.length === 0) {
+      console.warn(`⚠️  RAG: No chunks met the similarity threshold (< ${SIMILARITY_THRESHOLD}) for course ${courseId}`);
+    } else {
+      const scores = chunks.map((c) => c.similarity_score.toFixed(3)).join(", ");
+      console.log(`📚 RAG: Retrieved ${chunks.length} chunks. Scores (lower = better): [${scores}]`);
+    }
+
+    return chunks;
   } catch (error: any) {
     console.error("❌ Error in retreiving chunks from knowledge_base ", error);
     throw new Error(error);

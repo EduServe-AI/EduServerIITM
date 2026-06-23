@@ -3,8 +3,8 @@ import { MessageIntent } from "../types/message";
 
 // Patterns that require no knowledge base context 
 const CONTEXT_FREE_PATTERNS : RegExp[] = [
-    // Greetings
-    /^(hi|hey|hello|hii|hiii|yo|sup|howdy|greetings)[!?.,\s]*$/i,
+    // Greetings — match one or more greeting tokens (e.g. "hii", "hey hii", "hey hello hello")
+    /^((hi|hey|hello|hii|hiii|yo|sup|howdy|greetings)[!?.,\s]*)+$/i,
 
     // Thanks 
     /^(thanks|thank you|thankyou|thx|ty|thank u)[!?.,\s]*$/i,

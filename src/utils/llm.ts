@@ -135,6 +135,7 @@ export const formatContext = async (
     content: string;
     source_filename: string;
     document_url: string | null;
+    similarity_score?: number;
   }[]
 ) => {
   const contextText = contextChunks

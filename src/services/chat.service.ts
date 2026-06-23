@@ -55,10 +55,16 @@ export const prepareLLMChat = async (chat: Chat, userMessage: string, courseTitl
     }
 
     const contextChunks = await findSimilarChunks(userQueryEmbedding, courseId);
-    const contextResult = await formatContext(contextChunks);
 
-    contextText = contextResult.contextText
-    sourceLinks = contextResult.sourceLinks
+    if (contextChunks.length > 0) {
+      const contextResult = await formatContext(contextChunks);
+      contextText = contextResult.contextText;
+      sourceLinks = contextResult.sourceLinks;
+    } else {
+      // No relevant chunks found above the similarity threshold — we'll
+      // let the LLM answer from its parametric knowledge but show NO sources.
+      console.warn("⚠️  No relevant chunks found; answering without RAG context.");
+    }
   }
 
   // -------------------------------------------------------------------------
