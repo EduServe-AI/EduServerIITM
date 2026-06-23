@@ -140,7 +140,7 @@ export const insertKnowledgeChunk = async (chunk: chunkType) => {
 export const findSimilarChunks = async (
   embedding: number[],
   courseId: string,
-  limit: number = 3
+  limit: number = 5
 ) => {
   // Formatting the embedding vector for a raw sql query
   const embeddingSql = pgvector.toSql(embedding);

@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Request, Response } from "express";
+import sequelize from "../config/db.config";
 import Bots from "../models/bot.model";
 import Chats from "../models/chat.model";
 import ChatMessages from "../models/chatMessage.model";
@@ -124,28 +125,37 @@ export const getChatController = async (req: Request, res: Response) => {
       title: chat.title,
     };
 
-    // 4. Clean up messages: strip legacy ___SOURCES_JSON___ from content
-    //    and return sources from either the dedicated column or parsed from content
+    // 4. Clean up messages: strip ___SOURCES_JSON___ from content
+    //    and return sources as `sourceLinks` (matching the frontend interface)
     const SOURCES_DELIMITER = "\n___SOURCES_JSON___\n";
     const cleanedMessages = (chat.messages || []).map((msg) => {
       const plain = msg.toJSON();
-      if (plain.sources) {
-        // Sources already stored in the dedicated column
-        return plain;
-      }
-      // Handle legacy messages that have sources embedded in content
+
+      // Always strip the ___SOURCES_JSON___ block from content so the
+      // raw JSON is never shown to the user, regardless of whether
+      // sources also live in the dedicated JSONB column.
       const delimIdx = plain.content.indexOf(SOURCES_DELIMITER);
       if (delimIdx !== -1) {
         const rawJson = plain.content.slice(delimIdx + SOURCES_DELIMITER.length);
         plain.content = plain.content.slice(0, delimIdx);
-        try {
-          const parsed = JSON.parse(rawJson);
-          plain.sources = parsed.sources || null;
-        } catch {
-          plain.sources = null;
+
+        // If the dedicated `sources` column is empty, recover from content
+        if (!plain.sources) {
+          try {
+            const parsed = JSON.parse(rawJson);
+            plain.sources = parsed.sources || null;
+          } catch {
+            plain.sources = null;
+          }
         }
       }
-      return plain;
+
+      // Rename `sources` → `sourceLinks` to match the frontend chatMessage interface
+      const { sources, ...rest } = plain;
+      return {
+        ...rest,
+        sourceLinks: sources || null,
+      };
     });
 
     return Responder(res, {
@@ -284,12 +294,24 @@ export const generateResponseController = async (
 
     // Saving the full bot response to the database
     if (fullBotResponse) {
+      const hasSources = sourceLinks && sourceLinks.length > 0;
+
+      // Build the content to persist. We embed sources inside the content
+      // using the ___SOURCES_JSON___ delimiter so that getChatController's
+      // fallback parser can always recover them on reload – even if the
+      // dedicated `sources` JSONB column does not exist in the DB yet.
+      let contentToSave = fullBotResponse;
+      if (hasSources) {
+        const sourcesPayloadForDb = JSON.stringify({ sources: sourceLinks });
+        contentToSave += `\n___SOURCES_JSON___\n${sourcesPayloadForDb}`;
+      }
+
       await ChatMessages.create({
         id: botMessage.id,
         botId: chat.botId,
         sender: "bot",
-        content: fullBotResponse,
-        sources: sourceLinks && sourceLinks.length > 0 ? sourceLinks : null,
+        content: contentToSave,
+        sources: hasSources ? sourceLinks : null,
         userId: user.id,
         chatId: chat.id,
         username: user.username,
@@ -338,7 +360,7 @@ export const getUserChatsController = async (req: Request, res: Response) => {
     // 2. Fetch chats directly from the Chats model
     // This generates a much cheaper and faster SQL query
     const userChats = await Chats.findAll({
-      where: { userId: req.userId },
+      where: { userId: req.userId , isDeleted : false},
       attributes: [
         "id",
         "botId",
@@ -347,7 +369,16 @@ export const getUserChatsController = async (req: Request, res: Response) => {
         "lastInteractionTime",
         "createdAt",
       ],
-      order: [["lastInteractionTime", "DESC"]],
+      order: [
+        [
+          sequelize.fn(
+            "COALESCE",
+            sequelize.col("lastInteractionTime"),
+            sequelize.col("createdAt")
+          ),
+          "DESC",
+        ],
+      ],
       limit: 7,
     });
 
@@ -358,10 +389,18 @@ export const getUserChatsController = async (req: Request, res: Response) => {
       });
     }
 
+    const chatsWithInteractionTime = userChats.map((chat) => {
+      const plain = chat.toJSON() as any;
+      return {
+        ...plain,
+        lastInteractionTime: plain.lastInteractionTime || plain.createdAt,
+      };
+    });
+
     return Responder(res, {
       message: "User Chats Retrieved successfully",
       data: {
-        chats: userChats,
+        chats: chatsWithInteractionTime,
       },
     });
   } catch (error) {
@@ -373,3 +412,47 @@ export const getUserChatsController = async (req: Request, res: Response) => {
     });
   }
 };
+
+
+export const deleteChatController = async (req : Request , res : Response) => {
+  try {
+
+    // Retreiving the chatId from the params
+    const { chatId } = req.params;
+    console.log("chatId", chatId);
+    if (!chatId) {
+      return Responder(res, { error: "Chat ID is required for deleting", httpCode: 404 });
+    } 
+
+
+    const chat = await Chats.findByPk(chatId)
+
+    if (!chat){
+      return Responder(res , {
+        error : "Chat With given Id not found" , httpCode : 404
+      })
+    }
+
+    // First we need to mark the chat as deleted 
+    chat.isDeleted = true;
+    await chat.save(); 
+
+
+    // Later we need to run a scheduler to soft delete chat messages 
+
+    return Responder(res , {
+      message : "Chat Deleted successfully", 
+      httpCode : 200
+    })
+
+    
+  } catch (error) {
+    console.error(error);
+    return Responder(res , {
+      error : "INTERNAL SERVER ERROR",
+      message : "An unexpected error occurred on the server.",
+      httpCode : 500
+    })
+    
+  }
+}
