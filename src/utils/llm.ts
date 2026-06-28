@@ -124,6 +124,15 @@ export const documentLoader = async (courseName: string, blobName?: string) => {
       apiKey: config.PROD_UNSTRUCTURED_KEY,
       chunkingStrategy: "by_title",
       skipHeadersAndFooters: true,
+      // Keep section titles and their content together in the same chunk.
+      // Default is ~500 chars which splits "Problem Statement:" from its body.
+      maxCharacters: 2000,
+      // Merge tiny fragments (< 500 chars) into the next chunk so we never
+      // store a chunk that is just a heading with no body content.
+      combineUnderNChars: 500,
+      // Overlap between consecutive chunks so context at chunk boundaries
+      // is not completely lost.
+      overlap: 200,
     } as any,
   });
 
