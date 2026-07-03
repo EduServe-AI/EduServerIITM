@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   featuredChatBotController,
+  getBotByIdController,
   getBotsController,
   makeBotFeaturedController,
   recommendedChatBotController,
@@ -20,5 +21,8 @@ router.post("/feature", authMiddleware, makeBotFeaturedController);
 
 // For searching chatbots
 router.get("/", authMiddleware, getBotsController);
+
+// Public: Get single bot by ID (no auth — used for OG meta tags / link previews)
+router.get("/:botId", getBotByIdController);
 
 export default router;
