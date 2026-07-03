@@ -192,3 +192,42 @@ export const getBotsController = async (req: Request, res: Response) => {
     });
   }
 };
+
+/* ------------------- GET SINGLE BOT BY ID (PUBLIC) ------------------- */
+
+export const getBotByIdController = async (req: Request, res: Response) => {
+  try {
+    const { botId } = req.params;
+
+    const bot = await Bots.findByPk(botId, {
+      attributes: ["id", "name", "description", "level", "numInteractions", "courseId"],
+      include: [
+        {
+          model: Course,
+          as: "course",
+          attributes: ["id", "name"],
+        },
+      ],
+    });
+
+    if (!bot) {
+      return Responder(res, {
+        error: "Bot not found",
+        httpCode: 404,
+      });
+    }
+
+    return Responder(res, {
+      message: "Bot fetched successfully",
+      httpCode: 200,
+      data: { bot },
+    });
+  } catch (error) {
+    console.error("Error fetching bot by ID:", error);
+    return Responder(res, {
+      error: "INTERNAL_SERVER_ERROR",
+      message: "An unexpected error occurred on the server.",
+      httpCode: 500,
+    });
+  }
+};
