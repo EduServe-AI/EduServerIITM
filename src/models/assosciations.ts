@@ -14,6 +14,8 @@ import Skill from "./skill.model";
 import AvailabilityTimeSlot from "./timeSlot.model";
 import User from "./user.model";
 import UserLanguage from "./userLanguage.model";
+import Project from "./project.model";
+import Milestone from "./milestone.model";
 
 // setup associations
 export const setUpAssociations = () => {
@@ -347,7 +349,22 @@ export const setUpAssociations = () => {
     as: "course",
   });
 
+  // ----------------------- Project and Milestones Relationship -----------------
+  Project.hasMany(Milestone, {
+    foreignKey: "projectId",
+    as: "milestones",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  Milestone.belongsTo(Project, {
+    foreignKey: "projectId",
+    as: "project",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
   console.log("Associations set up successfully!");
 };
 
-export { Course, Enrollment, Level, User };
+export { Course, Enrollment, Level, User, Project, Milestone };

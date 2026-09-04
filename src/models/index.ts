@@ -16,6 +16,8 @@ import UserLanguage from "./userLanguage.model";
 // import KnowledgeBase from "./knowledgeBase.model";
 import { initializeKnowledgeBase } from "../services/knowledgeBase.service";
 import Session from "./session.model";
+import Project from "./project.model";
+import Milestone from "./milestone.model";
 
 export const syncModels = async () => {
   // Only use alter: true in development to avoid table locking and performance issues in production
@@ -26,6 +28,8 @@ export const syncModels = async () => {
   await User.sync(syncOptions);
   await Level.sync(syncOptions);
   await Course.sync(syncOptions);
+  await Project.sync(syncOptions);
+  await Milestone.sync(syncOptions);
   await Enrollment.sync(syncOptions);
   await InstructorProfiles.sync(syncOptions);
   await Skill.sync(syncOptions);

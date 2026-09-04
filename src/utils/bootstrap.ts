@@ -6,6 +6,7 @@ import { populateCoursesIfEmpty } from "../scripts/populateCourses";
 import { populateDaysIfEmpty } from "../scripts/populateDays";
 import { populateLanguagesIfEmpty } from "../scripts/populateLanguages";
 import { populateLevelsIfEmpty } from "../scripts/populateLevels";
+import { populateProjectsIfEmpty } from "../scripts/populateProjects";
 
 let isInitialized = false;
 let initializationPromise: Promise<void> | null = null;
@@ -40,6 +41,7 @@ export const initializeDatabase = () => {
       await populateLanguagesIfEmpty();
       await populateDaysIfEmpty();
       await populateBotsIfEmpty();
+      await populateProjectsIfEmpty();
 
       // Note: user's server.ts had commented out populateEmbeddingsIfEmpty
       // and server.ts didn't explicitly call initializeKnowledgeBase but models/index.ts syncModels call did.

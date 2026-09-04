@@ -14,6 +14,7 @@ import levelRoutes from "./routes/level.routes";
 import sessionRoutes from "./routes/session.routes";
 import studentRoutes from "./routes/student.routes";
 import userRoutes from "./routes/user.routes";
+import projectRoutes from "./routes/project.routes";
 import { initializeDatabase } from "./utils/bootstrap";
 
 const app = express();
@@ -83,6 +84,7 @@ app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/level", levelRoutes);
 app.use("/api/v1/enrollment", enrollmentRoutes);
 app.use("/api/v1/course", courseRoutes);
+app.use("/api/v1/project", projectRoutes);
 app.use("/api/v1/instructor", instructorRoutes);
 app.use("/api/v1/bot", chatBotRoutes);
 app.use("/api/v1/student", studentRoutes);

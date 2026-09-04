@@ -39,6 +39,53 @@ export interface CourseAttributes {
   updatedAt?: Date;
 }
 
+export interface MilestoneTask {
+  id: string;
+  title: string;
+  details?: string[];
+  subtasks?: string[];
+}
+
+export interface MilestoneResource {
+  title: string;
+  url?: string;
+  type?: string;
+}
+
+export interface MilestoneAttributes {
+  id: string;
+  projectId: string;
+  milestoneNumber: number;
+  title: string;
+  description: string;
+  expectedTime: string;
+  completionProgress: number;
+  tasks: MilestoneTask[];
+  deliverables?: string[];
+  resources?: MilestoneResource[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ProjectAttributes {
+  id: string;
+  name: string;
+  title: string;
+  code: string;
+  course: CourseName;
+  description: string;
+  version: string;
+  level: LevelName;
+  term?: Term;
+  year?: number;
+  credits: number;
+  estimatedDuration?: string;
+  isFeatured?: boolean;
+  milestones?: MilestoneAttributes[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export interface EnrollmentAttributes {
   id: string;
   userId: string;
